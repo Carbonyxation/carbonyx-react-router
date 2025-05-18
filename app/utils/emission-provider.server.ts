@@ -3,6 +3,8 @@ import {
   collectedData,
   factors,
   offsetData,
+  orgFactors,
+  combinedFactorsView,
   type CollectedData,
   type CollectedDataWithEmission,
 } from "~/db/schema";
@@ -235,29 +237,33 @@ async function getEmissionData(
   const periodFormat = monthly ? "%Y-%m" : "%Y";
 
   const emissionDataQuery = db
-    .select({
-      // Select the factor type instead of the individual factor name
-      name: factors.type,
-      period: sql`strftime(${periodFormat}, ${
-        collectedData.timestamp
-      }, 'unixepoch')`.as("period"),
-      totalEmission:
-        sql<number>`sum(${collectedData.value} * ${collectedData.recordedFactor})`.as(
-          "total_emission",
-        ),
-    })
-    .from(collectedData)
-    .innerJoin(factors, eq(collectedData.factorId, factors.id))
-    .where(
-      and(
-        eq(collectedData.orgId, orgId),
-        between(collectedData.timestamp, startDate, endDate),
+  .select({
+    name: combinedFactorsView.type,
+    period: sql`strftime(${periodFormat}, ${
+      collectedData.timestamp
+    }, 'unixepoch')`.as("period"),
+    totalEmission:
+      sql<number>`sum(${collectedData.value} * ${collectedData.recordedFactor})`.as(
+        "total_emission",
       ),
+  })
+  .from(collectedData)
+  .innerJoin(
+    combinedFactorsView, 
+    and(
+      eq(collectedData.factorId, combinedFactorsView.id),
+      eq(collectedData.isOrgFactor, combinedFactorsView.isOrgFactor)
     )
-    // Group by factor type and period
-    .groupBy(factors.type, sql`period`)
-    .orderBy(sql`period`);
-
+  )
+  .where(
+    and(
+      eq(collectedData.orgId, orgId),
+      between(collectedData.timestamp, startDate, endDate),
+    ),
+  )
+  .groupBy(combinedFactorsView.type, sql`period`)
+  .orderBy(sql`period`);
+  
   const emissionData = await emissionDataQuery;
 
   // Group data by emission source (factor type)
@@ -513,7 +519,7 @@ async function provideData(orgId: string): Promise<DataOutput> {
 
   // Yearly Calculations
   const latestYearlyGrossEmissionsTonnes =
-    yearlyGrossEmissions.length > 0
+	yearlyGrossEmissions.length > 0
       ? yearlyGrossEmissions.at(-1)!.emissions / 1000
       : 0;
 

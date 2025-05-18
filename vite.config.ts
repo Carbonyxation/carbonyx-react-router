@@ -10,11 +10,9 @@ export default defineConfig({
       plugins: [pandacss, autoprefixer],
     },
   },
-  server: {
-    allowedHosts: ["4d9e-110-169-141-206.ngrok-free.app"]
-  },
   plugins: [
     reactRouter(),
     tsconfigPaths(),
   ],
+
 });

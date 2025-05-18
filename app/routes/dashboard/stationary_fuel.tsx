@@ -6,14 +6,14 @@ import {
   useSubmit,
   useActionData,
 } from "react-router";
-import { and, eq } from "drizzle-orm";
+import { and, eq, or, isNull } from "drizzle-orm";
 import { useEffect, useState } from "react";
 import DataInput, { type DataInputProps } from "~/components/data-input";
 import Table from "~/components/table";
 import { db } from "~/db/db";
 import {
   collectedData,
-  factors,
+  combinedFactorsView,
   type CollectedData,
   type CollectedDataWithEmission,
 } from "~/db/schema";
@@ -29,26 +29,27 @@ export async function loader(args: Route.LoaderArgs) {
   const stationaryFuelsUsage = await db
     .select()
     .from(collectedData)
-    .innerJoin(factors, eq(collectedData.factorId, factors.id))
+    .innerJoin(combinedFactorsView, eq(collectedData.factorId, combinedFactorsView.id))
     .where(
       and(
-        eq(factors.type, "stationary_combustion"),
-        eq(collectedData.orgId, orgId)
+	eq(collectedData.orgId, orgId),
+        eq(combinedFactorsView.type, factorType)
       )
     );
 
   // Fetch available factors with 'factor' value
   const availableFactors = await db
-    .select({
-      id: factors.id,
-      name: factors.name,
-      unit: factors.unit,
-      type: factors.type,
-      subType: factors.subType,
-      factor: factors.factor, // Include the factor value
-    })
-    .from(factors)
-    .where(eq(factors.type, "stationary_combustion"));
+    .select()
+    .from(combinedFactorsView)
+    .where(
+      and(
+	or(
+	  isNull(combinedFactorsView.factorOrgId),
+	  eq(combinedFactorsView.factorOrgId, orgId)
+	),
+	eq(combinedFactorsView.type, factorType)
+      )
+    )
 
   type SFUsageWithEmission = (typeof stationaryFuelsUsage)[number] & {
     totalEmission: number;
@@ -73,11 +74,11 @@ export async function loader(args: Route.LoaderArgs) {
   const formattedData = sf_usage_with_emission.map((item) => {
     return {
       ...item.collected_data,
-      type: item.factors.name,
+      type: item.combined_factors_view.name,
       recordedFactor: item.recordedFactor,
-      totalEmission: item.totalEmission,
-    };
-  });
+      totalEmission: item.totalEmission
+    }
+  })
 
   return { formattedData, availableFactors };
 }

@@ -6,7 +6,7 @@ import {
   useNavigation,
   useSubmit,
 } from "react-router";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull, or } from "drizzle-orm";
 import { useEffect, useState } from "react";
 import DataInput, { type DataInputProps } from "~/components/data-input";
 import Table from "~/components/table";
@@ -14,13 +14,14 @@ import { db } from "~/db/db";
 import {
   collectedData,
   factors,
+  combinedFactorsView,
   type CollectedDataWithEmission,
 } from "~/db/schema";
 import type { Route } from "./+types/electricity";
 import { getAuth } from "@clerk/react-router/ssr.server";
 import { toast } from "sonner";
 
-const factorType = "grid"; // Set the factor type here
+const factorType = "electricity";
 
 export async function loader(args: Route.LoaderArgs) {
   const auth = await getAuth(args);
@@ -29,36 +30,51 @@ export async function loader(args: Route.LoaderArgs) {
   const electricity_usage = await db
     .select()
     .from(collectedData)
+    .innerJoin(combinedFactorsView, eq(collectedData.factorId, combinedFactorsView.id))
     .where(
       and(
         eq(collectedData.orgId, orgId),
-        eq(collectedData.factorId, 42) // You might need a better way to filter initial data
+        eq(combinedFactorsView.type, factorType)
       )
     );
+
   // Fetch available factors with 'factor' value
   const availableFactors = await db
-    .select({
-      id: factors.id,
-      name: factors.name,
-      unit: factors.unit,
-      type: factors.type,
-      subType: factors.subType,
-      factor: factors.factor, // Include the factor value
-    })
-    .from(factors);
+    .select()
+    .from(combinedFactorsView)
+    .where(
+      and(
+        or(
+          isNull(combinedFactorsView.factorOrgId),
+          eq(combinedFactorsView.factorOrgId, orgId)
+        ),
+        eq(combinedFactorsView.type, factorType)
+      )
+    )
+
   // Calculate total emission using the fetched factor
   const electricity_usage_with_emission: CollectedDataWithEmission[] =
     electricity_usage.map((data) => {
       const factor =
-        availableFactors.find((f) => f.id === data.factorId)?.factor || 0;
+            availableFactors.find((f) => f.id === data.collected_data.factorId)?.factor || 0;
       return {
         ...data,
         recordedFactor: factor,
         totalEmission:
-          Math.round((data.value * factor + Number.EPSILON) * 100) / 100,
+          Math.round((data.collected_data.value * factor + Number.EPSILON) * 100) / 100,
       };
     });
-  return { electricity_usage_with_emission, availableFactors };
+
+  const formattedData = electricity_usage_with_emission.map((item) => {
+    return {
+      ...item.collected_data,
+      type: item.combined_factors_view.name,
+      recordedFactor: item.recordedFactor,
+      totalEmission: item.totalEmission
+    }
+  })
+  
+  return { formattedData, availableFactors };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -120,24 +136,19 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function ElectricityInputPage() {
-  const { electricity_usage_with_emission, availableFactors } =
+  const { formattedData, availableFactors } =
     useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const submit = useSubmit();
 
   // Use state to track the table data, initialized from the loader
-  const [tableData, setTableData] = useState<CollectedDataWithEmission[]>(
-    electricity_usage_with_emission
+  const [tableData, setTableData] = useState(
+    formattedData
   );
 
   const [editingData, setEditingData] =
     useState<DataInputProps["editingData"]>(null);
-
-  // Update the state when loader data changes (initial load)
-  useEffect(() => {
-    setTableData(electricity_usage_with_emission);
-  }, [electricity_usage_with_emission]);
 
   // Update the table data immediately after action and show a toast
   useEffect(() => {

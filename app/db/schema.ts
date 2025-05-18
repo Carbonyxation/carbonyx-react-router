@@ -1,11 +1,13 @@
 import {
   sqliteTable,
+  sqliteView,
   text,
   integer,
   real,
   index,
-  foreignKey,
+  union
 } from "drizzle-orm/sqlite-core";
+import { sql } from 'drizzle-orm'
 
 // Central Factors data for the organization
 export const factors = sqliteTable("factors", {
@@ -17,16 +19,17 @@ export const factors = sqliteTable("factors", {
   factor: real("factor").notNull(),
 });
 
-
 // organization-specific factor data
 export const orgFactors = sqliteTable("org_factors", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   orgId: text("org_id").notNull(),
+  originalFactorId: integer("original_factor_id").references(() => factors.id),
   name: text("name").notNull(),
   type: text("type").notNull(),
   subType: text("sub_type").notNull(),
   unit: text("unit").notNull(),
   factor: real("factor").notNull(),
+  isCustom: integer("is_custom", { mode: 'boolean' }).notNull().default(false)
 });
 
 // Define the collectedData table
@@ -40,6 +43,7 @@ export const collectedData = sqliteTable(
     factorId: integer("factor_id")
       .notNull()
       .references(() => factors.id), // Define foreign key inline
+    isOrgFactor: integer("is_org_factor", { mode: 'boolean' }).notNull().default(false),
     recordedFactor: integer("recorded_factor").notNull(),
     value: integer("value").notNull(),
     timestamp: integer("timestamp")
@@ -125,6 +129,36 @@ export const notebook = sqliteTable(
     index("notebook_timestamp_idx").on(table.timestamp)
   ]
 )
+
+export const combinedFactorsView = sqliteView("combined_factors_view").as((qb) => {
+  const centralFactors = qb
+    .select({
+      id: factors.id,
+      factorOrgId: sql`NULL`.as("factor_org_id"),
+      name: factors.name,
+      type: factors.type,
+      subType: factors.subType,
+      unit: factors.unit,
+      factor: factors.factor,
+      factorSource: sql`0`.as("factor_source"),
+    })
+    .from(factors);
+
+  const orgSpecificFactors = qb
+    .select({
+      id: orgFactors.id,
+      factorOrgId: orgFactors.orgId,
+      name: orgFactors.name,
+      type: orgFactors.type,
+      subType: orgFactors.subType,
+      unit: orgFactors.unit,
+      factor: orgFactors.factor,
+      factorSource: sql`1`.as("factor_source"),
+    })
+    .from(orgFactors);
+
+  return union(centralFactors, orgSpecificFactors);
+});
 
 export type Notebook = typeof notebook.$inferSelect;
 

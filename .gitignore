@@ -12,3 +12,5 @@ carbonyxation/
 .pnp.*
 
 .env
+.vercel
+.env*.local
