@@ -63,7 +63,6 @@ export const FactorForm = ({ editingFactor, onSubmit, onEdit }: FactorFormProps)
       });
     } else {
       await onSubmit({
-        orgId,
         name,
         type,
         subType,
@@ -106,13 +105,12 @@ export const FactorForm = ({ editingFactor, onSubmit, onEdit }: FactorFormProps)
         />
       </label>
       <label>
-        Sub-Type:
+        Sub Type:
         <input
           type="text"
           value={subType}
           onChange={(e) => setSubType(e.target.value)}
           className={inputStyle}
-          required
         />
       </label>
       <label>
