@@ -54,43 +54,40 @@ const DataInput = ({
   const [mode, setMode] = useState<"factor" | "asset">(
     inputType === "asset" ? "asset" : "factor"
   );
-
+  
   // Factor input state
   const [factorId, setFactorId] = useState<number>(0);
   const [value, setValue] = useState<number | "">(0);
   const [inputValue, setInputValue] = useState<string>("0");
-
+  
   // Asset input state
   const [assetId, setAssetId] = useState<string>("");
   const [assetValue, setAssetValue] = useState<number | "">(0);
   const [assetValueInput, setAssetValueInput] = useState<string>("0");
-
-  const hasEditingDataChanged = useRef(false);
+  
   const auth = useAuth();
   const orgId = auth.orgId || "1";
-
+  
   // Get filtered lists based on availability
   const filteredFactors = factorType ?
     availableFactors.filter(factor => factor.type === factorType) :
     availableFactors;
-
   const hasFactors = filteredFactors.length > 0;
   const hasAssets = availableAssets.length > 0;
-
+  
   // Initialize with first available option or from editingData
   useEffect(() => {
     if (filteredFactors.length > 0 && factorId === 0) {
       setFactorId(filteredFactors[0].id);
     }
-
     if (availableAssets.length > 0 && assetId === "") {
       setAssetId(availableAssets[0].id);
     }
   }, [filteredFactors, availableAssets]);
-
-  // Handle editing data
+  
+  // Handle editing data - updated to properly handle changes to editingData
   useEffect(() => {
-    if (editingData && !hasEditingDataChanged.current) {
+    if (editingData) {
       // Reset based on mode and what data is available
       if (inputType === "asset" || ((editingData.assetId || editingData.asset_id) && inputType === "both")) {
         setMode("asset");
@@ -108,28 +105,48 @@ const DataInput = ({
           setInputValue(editingData.value.toString());
         }
       }
-      hasEditingDataChanged.current = true;
+    } else {
+      // Reset form when not editing
+      if (mode === "factor") {
+        setValue(0);
+        setInputValue("0");
+        if (filteredFactors.length > 0) {
+          setFactorId(filteredFactors[0].id);
+        }
+      } else {
+        setAssetValue(0);
+        setAssetValueInput("0");
+        if (availableAssets.length > 0) {
+          setAssetId(availableAssets[0].id);
+        }
+      }
     }
-  }, [editingData, inputType]);
-
+  }, [editingData, inputType, filteredFactors, availableAssets, mode]);
+  
   // Get selected item details
   const selectedFactor = filteredFactors.find(factor => factor.id === factorId);
   const selectedAsset = availableAssets.find(asset => asset.id === assetId);
-
+  
   // Calculate emissions for preview (when applicable)
   const selectedFactorValue = selectedFactor?.factor || 0;
-
   const calculatedFactorEmission = typeof value === 'number' ?
     Math.round(((value * selectedFactorValue) + Number.EPSILON) * 100) / 100 : 0;
-
-  const assetFactorValue = selectedAsset?.factor || 0; // Changed from kwh_per_asset to factor
+  
+  const assetFactorValue = selectedAsset?.factor || 0;
   const calculatedAssetEmission = typeof assetValue === 'number' && selectedAsset ?
     Math.round(((assetValue * assetFactorValue * selectedAsset.conversion_rate) + Number.EPSILON) * 100) / 100 : 0;
-
+  
   // Form handling
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
+    
+    // Optional: Add confirmation dialog when editing
+    if (editingData) {
+      if (!confirm("Are you sure you want to save these changes?")) {
+        return; // User canceled
+      }
+    }
+    
     if (mode === "factor" && selectedFactor) {
       if (editingData) {
         await onEdit(editingData.id, {
@@ -144,9 +161,12 @@ const DataInput = ({
           factorValue: selectedFactorValue,
         });
       }
-      // Reset form after submission
-      setValue(0);
-      setInputValue("0");
+      
+      // Reset form after submission if not editing
+      if (!editingData) {
+        setValue(0);
+        setInputValue("0");
+      }
     } else if (mode === "asset" && selectedAsset) {
       if (editingData) {
         await onEdit(editingData.id, {
@@ -162,19 +182,19 @@ const DataInput = ({
           recordedFactor: assetFactorValue,
         });
       }
-      // Reset form after submission
-      setAssetValue(0);
-      setAssetValueInput("0");
+      
+      // Reset form after submission if not editing
+      if (!editingData) {
+        setAssetValue(0);
+        setAssetValueInput("0");
+      }
     }
-
-    hasEditingDataChanged.current = false;
   };
 
   // Input handlers
   const handleFactorValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setInputValue(newValue);
-
     if (newValue === "" || newValue === "-") {
       if (allowEmptyValues) {
         setValue(newValue === "" ? "" : 0);
@@ -189,7 +209,6 @@ const DataInput = ({
   const handleAssetValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setAssetValueInput(newValue);
-
     if (newValue === "" || newValue === "-") {
       if (allowEmptyValues) {
         setAssetValue(newValue === "" ? "" : 0);

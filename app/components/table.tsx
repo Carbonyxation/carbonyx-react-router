@@ -8,6 +8,7 @@ export interface Column {
   type: string;
   prefix?: string | ((row: RowData) => string);
   suffix?: string | ((row: RowData) => string);
+  render?: (value: any, row?: RowData) => React.ReactNode;
 }
 
 interface RowData {
@@ -100,7 +101,7 @@ interface RowProps {
   rowData: RowData;
   columns: Column[];
   onEditStart: (data: any) => void;
-  onDelete: (id: string) => void;
+  onDelete: (data: any) => void;
 }
 
 const TableRow = ({ rowData, columns, onEditStart, onDelete }: RowProps) => {
@@ -112,19 +113,40 @@ const TableRow = ({ rowData, columns, onEditStart, onDelete }: RowProps) => {
     return `${day}.${month}.${year}`;
   };
 
+  const shouldDisableDelete = () => {
+    return rowData.factorSource === 0 && !rowData.isOverridden;
+  };
+
   const handleEditClick = () => {
     // Pass through the entire rowData object to let the parent component extract what it needs
     onEditStart(rowData);
   };
 
   const handleDeleteClick = () => {
-    onDelete(rowData.id as string);
+    if(!shouldDisableDelete()) {
+      onDelete(rowData);
+    }
   };
 
   return (
     <tr>
       {columns.map((column) => {
         const cellValue = rowData[column.key];
+	let displayValue;
+
+	if (column.render && typeof column.render === 'function') {
+	  displayValue = column.render(cellValue, rowData);
+	}
+	else if (column.type === "timestamp") {
+	  displayValue = formatDate(cellValue as number);
+	}
+	else if (cellValue !== undefined && cellValue !== null) {
+	  displayValue = cellValue.toString();
+	}
+	else {
+	  displayValue = "";
+	}
+	
         return (
           <td
             key={`${cellValue}-${column.key}`}
@@ -144,11 +166,7 @@ const TableRow = ({ rowData, columns, onEditStart, onDelete }: RowProps) => {
               </span>
             )}
 
-            {column.type === "timestamp"
-              ? formatDate(cellValue as number)
-              : cellValue !== undefined && cellValue !== null
-                ? cellValue.toString()
-                : ""}
+            {displayValue}
 
             {column.suffix && (
               <span className={css({ color: "neutral.500" })}>
@@ -191,16 +209,17 @@ const TableRow = ({ rowData, columns, onEditStart, onDelete }: RowProps) => {
         </button>
         <button
           onClick={handleDeleteClick}
+	  disabled={shouldDisableDelete()}
           className={css({
-            bg: "red.400",
+            bg: shouldDisableDelete() ? "gray.400" : "red.400",
             color: "white",
             py: 2,
             px: 4,
             borderRadius: "md",
             border: "none",
-            cursor: "pointer",
+            cursor: shouldDisableDelete() ? "not-allowed" : "pointer",
             transition: "background-color 0.2s ease-in-out",
-            "&:hover": { bg: "red.500" },
+            "&:hover": { bg: shouldDisableDelete() ? "gray.300" : "red.500" },
           })}
         >
           Delete
@@ -214,7 +233,7 @@ interface BodyProps {
   data: RowData[];
   columns: Column[];
   onEditStart: (data: any) => void;
-  onDelete: (id: string) => void;
+  onDelete: (data: any) => void;
 }
 
 const TableBody = ({ data, columns, onEditStart, onDelete }: BodyProps) => {
@@ -237,7 +256,7 @@ interface TableProps {
   columns: Column[];
   data: RowData[];
   onEditStart: (data: any) => void;
-  onDelete: (id: string) => void;
+  onDelete: (data: any) => void;
 }
 
 const Table = ({ columns, data, onEditStart, onDelete }: TableProps) => {

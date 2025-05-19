@@ -352,10 +352,26 @@ export default function FactorRoute() {
     submit(formData, { method: "post" });
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (itemToDelete) => {
+    let idToDelete;
+
+    if (itemToDelete.factorSource === 0 && itemToDelete.isOverridden) {
+      idToDelete = itemToDelete.orgFactorId;
+    } else if (itemToDelete.isCustom) {
+      idToDelete = itemToDelete.id;
+    } else {
+      toast.error("Cannot delete central factors");
+      return;
+    }
+
+    if (!idToDelete) {
+      toast.error("Cannot delete this factor");
+      return;
+    }
+    
     const formData = new FormData();
     formData.append("intent", "delete");
-    formData.append("id", id.toString());
+    formData.append("id", idToDelete.toString());
     submit(formData, { method: "post" });
   };
 
@@ -406,12 +422,15 @@ export default function FactorRoute() {
         data={factorData}
         onEditStart={handleEditStart}
         onDelete={(item) => {
+	  console.log("O:", item)
           // Only allow deletion of organization factors, not central ones
-          if (item.factorSource === 0) {
+          if (item.factorSource === 0 && !item.isOverridden) {
             toast.error("Cannot delete central factors");
             return;
           }
-          handleDelete(item.id);
+	  if(confirm("Are you sure you want to delete this factor?")) {
+            handleDelete(item);
+	  }
         }}
       />
     </div>

@@ -27,40 +27,49 @@ export const FactorForm = ({ editingFactor, onSubmit, onEdit }: FactorFormProps)
   const auth = useAuth();
   const orgId = auth.orgId || "1";
   const isEditing = !!editingFactor;
-
   const [name, setName] = useState("");
   const [type, setType] = useState("");
   const [subType, setSubType] = useState("");
   const [unit, setUnit] = useState("");
   const [factor, setFactor] = useState("");
-
-  const hasEditingDataApplied = useRef(false);
-
+  
+  // Replace hasEditingDataApplied with this effect that runs whenever editingFactor changes
   useEffect(() => {
-    if (editingFactor && !hasEditingDataApplied.current) {
+    if (editingFactor) {
+      // Update form fields when a new factor is being edited
       setName(editingFactor.name);
       setType(editingFactor.type);
-      setSubType(editingFactor.subType);
+      setSubType(editingFactor.subType || "");
       setUnit(editingFactor.unit);
       setFactor(editingFactor.factor.toString());
-      hasEditingDataApplied.current = true;
+    } else {
+      // Reset form when not editing
+      setName("");
+      setType("");
+      setSubType("");
+      setUnit("");
+      setFactor("");
     }
-  }, [editingFactor]);
+  }, [editingFactor]); // This dependency ensures the effect runs when editingFactor changes
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const numericFactor = parseFloat(factor);
     if (isNaN(numericFactor)) return alert("Invalid factor value");
-
+    
     if (isEditing && editingFactor) {
-      await onEdit(editingFactor.id, {
-        name,
-        type,
-        subType,
-        unit,
-        factor: numericFactor,
-      });
+      // Optional: Add confirmation before saving changes
+      if (confirm("Are you sure you want to save these changes?")) {
+        await onEdit(editingFactor.id, {
+          name,
+          type,
+          subType,
+          unit,
+          factor: numericFactor,
+        });
+      } else {
+        return; // User canceled the edit
+      }
     } else {
       await onSubmit({
         name,
@@ -71,8 +80,8 @@ export const FactorForm = ({ editingFactor, onSubmit, onEdit }: FactorFormProps)
         isCustom: true,
       });
     }
-
-    // Optionally reset form
+    
+    // Optionally reset form after submit
     if (!isEditing) {
       setName("");
       setType("");
@@ -81,7 +90,7 @@ export const FactorForm = ({ editingFactor, onSubmit, onEdit }: FactorFormProps)
       setFactor("");
     }
   };
-
+  
   return (
     <form onSubmit={handleSubmit} className={css({ display: "grid", gap: 4, border: "1px solid", borderColor: "neutral.400", bg: "white", borderRadius: "md", p: 4 })}>
       <label>
