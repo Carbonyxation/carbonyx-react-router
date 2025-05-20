@@ -18,64 +18,69 @@ import {
   type CollectedDataWithEmission,
 } from "~/db/schema";
 import type { Route } from "./+types/electricity";
-import { getAuth } from "@clerk/react-router/ssr.server";
 import { toast } from "sonner";
+
+import { authkitLoader, getWorkOS } from "@workos-inc/authkit-react-router";
+import { redirect } from 'react-router'
 
 const factorType = "electricity";
 
-export async function loader(args: Route.LoaderArgs) {
-  const auth = await getAuth(args);
-  const orgId = auth.orgId!;
-  // Fetch initial data
-  const electricity_usage = await db
-    .select()
-    .from(collectedData)
-    .innerJoin(combinedFactorsView, eq(collectedData.factorId, combinedFactorsView.id))
-    .where(
-      and(
-        eq(collectedData.orgId, orgId),
-        eq(combinedFactorsView.type, factorType)
-      )
-    );
+export const loader = (args: Route.LoaderArgs) =>
+  authkitLoader(args, async ({ request, auth }) => {
+    // if there is no current active org, redirect to onboarding to force set one active
+    if (!auth.organizationId) return redirect('/onboarding')
 
-  // Fetch available factors with 'factor' value
-  const availableFactors = await db
-    .select()
-    .from(combinedFactorsView)
-    .where(
-      and(
-        or(
-          isNull(combinedFactorsView.factorOrgId),
-          eq(combinedFactorsView.factorOrgId, orgId)
-        ),
-        eq(combinedFactorsView.type, factorType)
-      )
-    )
+    const orgId = auth.organizationId;
+    // Fetch initial data
+    const electricity_usage = await db
+      .select()
+      .from(collectedData)
+      .innerJoin(combinedFactorsView, eq(collectedData.factorId, combinedFactorsView.id))
+      .where(
+        and(
+          eq(collectedData.orgId, orgId),
+          eq(combinedFactorsView.type, factorType)
+        )
+      );
 
-  // Calculate total emission using the fetched factor
-  const electricity_usage_with_emission: CollectedDataWithEmission[] =
-    electricity_usage.map((data) => {
-      const factor =
-            availableFactors.find((f) => f.id === data.collected_data.factorId)?.factor || 0;
+    // Fetch available factors with 'factor' value
+    const availableFactors = await db
+      .select()
+      .from(combinedFactorsView)
+      .where(
+        and(
+          or(
+            isNull(combinedFactorsView.factorOrgId),
+            eq(combinedFactorsView.factorOrgId, orgId)
+          ),
+          eq(combinedFactorsView.type, factorType)
+        )
+      )
+
+    // Calculate total emission using the fetched factor
+    const electricity_usage_with_emission: CollectedDataWithEmission[] =
+      electricity_usage.map((data) => {
+        const factor =
+          availableFactors.find((f) => f.id === data.collected_data.factorId)?.factor || 0;
+        return {
+          ...data,
+          recordedFactor: factor,
+          totalEmission:
+            Math.round((data.collected_data.value * factor + Number.EPSILON) * 100) / 100,
+        };
+      });
+
+    const formattedData = electricity_usage_with_emission.map((item) => {
       return {
-        ...data,
-        recordedFactor: factor,
-        totalEmission:
-          Math.round((data.collected_data.value * factor + Number.EPSILON) * 100) / 100,
-      };
-    });
+        ...item.collected_data,
+        type: item.combined_factors_view.name,
+        recordedFactor: item.recordedFactor,
+        totalEmission: item.totalEmission
+      }
+    })
 
-  const formattedData = electricity_usage_with_emission.map((item) => {
-    return {
-      ...item.collected_data,
-      type: item.combined_factors_view.name,
-      recordedFactor: item.recordedFactor,
-      totalEmission: item.totalEmission
-    }
-  })
-  
-  return { formattedData, availableFactors };
-}
+    return { formattedData, availableFactors };
+  }, { ensureSignedIn: true })
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();

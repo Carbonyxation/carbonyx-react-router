@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useAuth } from "@clerk/react-router";
 import { css } from "carbonyxation/css";
+import type { FactorData } from "./data-input";
 
 export interface FactorFormProps {
   editingFactor?: {
@@ -21,18 +21,17 @@ export interface FactorFormProps {
     isCustom?: boolean;
   }) => Promise<void>;
   onEdit: (id: number, data: Partial<FactorData>) => Promise<void>;
+  orgId: string;
 }
 
-export const FactorForm = ({ editingFactor, onSubmit, onEdit }: FactorFormProps) => {
-  const auth = useAuth();
-  const orgId = auth.orgId || "1";
+export const FactorForm = ({ editingFactor, onSubmit, onEdit, orgId }: FactorFormProps) => {
   const isEditing = !!editingFactor;
   const [name, setName] = useState("");
   const [type, setType] = useState("");
   const [subType, setSubType] = useState("");
   const [unit, setUnit] = useState("");
   const [factor, setFactor] = useState("");
-  
+
   // Replace hasEditingDataApplied with this effect that runs whenever editingFactor changes
   useEffect(() => {
     if (editingFactor) {
@@ -56,7 +55,7 @@ export const FactorForm = ({ editingFactor, onSubmit, onEdit }: FactorFormProps)
     e.preventDefault();
     const numericFactor = parseFloat(factor);
     if (isNaN(numericFactor)) return alert("Invalid factor value");
-    
+
     if (isEditing && editingFactor) {
       // Optional: Add confirmation before saving changes
       if (confirm("Are you sure you want to save these changes?")) {
@@ -80,7 +79,7 @@ export const FactorForm = ({ editingFactor, onSubmit, onEdit }: FactorFormProps)
         isCustom: true,
       });
     }
-    
+
     // Optionally reset form after submit
     if (!isEditing) {
       setName("");
@@ -90,7 +89,7 @@ export const FactorForm = ({ editingFactor, onSubmit, onEdit }: FactorFormProps)
       setFactor("");
     }
   };
-  
+
   return (
     <form onSubmit={handleSubmit} className={css({ display: "grid", gap: 4, border: "1px solid", borderColor: "neutral.400", bg: "white", borderRadius: "md", p: 4 })}>
       <label>

@@ -6,7 +6,6 @@ import { redirect } from "react-router";
 import { stripe } from "~/stripe";
 import { env } from "~/env.server";
 
-import { createClerkClient } from "@clerk/backend";
 import { useState } from "react";
 import { button } from "~/components/button";
 import { getUrl } from "~/utils/utilities";
@@ -17,11 +16,28 @@ import { getSubTier } from "~/utils/subscription";
 
 import { toast } from 'sonner'
 
-export async function loader(args: Route.LoaderArgs) {
-  const current_tier = await getSubTier(args)
+import { authkitLoader, getWorkOS } from "@workos-inc/authkit-react-router";
+import type { SubscriptionPlan } from "~/stores";
 
-  return { current_tier }
-}
+export const loader = (args: Route.LoaderArgs) =>
+  authkitLoader(args, async ({ request, auth }) => {
+    // if there is no current active org, redirect to onboarding to force set one active
+    if (!auth.organizationId) return redirect('/onboarding')
+
+    const wos = getWorkOS()
+    const orgList = await wos.userManagement.listOrganizationMemberships({
+      userId: auth.user.id,
+    })
+
+    // if no organizations exist on the user, navigate to onboarding. onboarding should set the first org created for the user as the main active one
+    if (orgList.data.length === 0) {
+      return redirect('/onboarding')
+    }
+
+    let current_tier: SubscriptionPlan | null = await getSubTier(auth.organizationId)
+
+    return { current_tier }
+  })
 
 export async function action(args: Route.ActionArgs) {
   const auth = await getAuth(args);

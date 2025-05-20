@@ -4,8 +4,6 @@ import { button } from "~/components/button";
 import InputEntry from "~/components/input-entry";
 import type { Route } from "./+types/org-billing";
 
-import { getAuth } from "@clerk/react-router/ssr.server";
-import { createClerkClient } from "@clerk/backend";
 import { env } from "~/env.server";
 
 import { redirect } from "react-router";
@@ -16,24 +14,21 @@ import { toast } from "sonner";
 import { stripe } from "~/stripe";
 import { getSubInformation } from "~/utils/subscription";
 
-export async function loader(args: Route.LoaderArgs) {
-  const auth = await getAuth(args);
+import { authkitLoader, getWorkOS } from "@workos-inc/authkit-react-router";
 
-  if (!auth.orgId) return redirect("/");
+export const loader = (args: Route.LoaderArgs) =>
+  authkitLoader(args, async ({ request, auth }) => {
+    if (!auth.organizationId) return redirect("/onboarding");
+    const wos = getWorkOS()
+    const org = await wos.organizations.getOrganization(auth.organizationId)
 
-  const org = await createClerkClient({
-    secretKey: env.CLERK_SECRET_KEY,
-  }).organizations.getOrganization({
-    organizationId: auth.orgId,
-  });
+    const billingEmail = org.metadata.billingEmail;
+    const subscription = await getSubInformation(args);
 
-  const billingEmail = org.privateMetadata.billingEmail as string;
-  const subscription = await getSubInformation(args);
+    if (!subscription) return redirect('/')
 
-  if (!subscription) return redirect('/')
-
-  return { billingEmail, subscription };
-}
+    return { billingEmail, subscription };
+  })
 
 export async function action(args: Route.ActionArgs) {
   const auth = await getAuth(args);

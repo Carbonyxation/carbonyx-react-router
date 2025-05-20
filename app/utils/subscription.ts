@@ -1,12 +1,9 @@
 import type { LoaderFunctionArgs } from "react-router";
-import { getAuth } from "~/utils/auth-helper";
 import { getStripeSubByOrgId } from "./kv";
 import { env } from "~/env.server";
 
-export async function getSubTier(args: LoaderFunctionArgs) {
-  const auth = await getAuth(args);
-  if (!auth.orgId) return null;
-  const sub = await getStripeSubByOrgId(auth.orgId);
+export async function getSubTier(orgId: string) {
+  const sub = await getStripeSubByOrgId(orgId);
 
   if (sub?.status === "active") return "Standard"; // Enterprise plan comes later
   return "Demo";

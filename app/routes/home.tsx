@@ -4,7 +4,6 @@ import Welcome from "../assets/welcome.png";
 import { css } from "carbonyxation/css";
 import { button } from "~/components/button";
 import Logo from "../assets/logo.png";
-import { SignedOut, SignedIn, SignUpButton } from "@clerk/react-router";
 import { Link } from "react-router";
 
 export function meta({ }: Route.MetaArgs) {
@@ -14,7 +13,12 @@ export function meta({ }: Route.MetaArgs) {
   ];
 }
 
-export default function Home() {
+interface Props {
+  user: any
+  signUpUrl: string
+}
+
+export default function Home({ user, signUpUrl }: Props) {
   return (
     <div
       id="landing"
@@ -61,20 +65,21 @@ export default function Home() {
           >
             Let us handle the accounting works, so you can focus on the future
           </span>
-          <SignedOut>
-            <SignUpButton>
+          {!user ? (
+            <Link to={signUpUrl}>
               <button className={button({ variant: "solid", color: "primary" })}>
                 Get Started
               </button>
-            </SignUpButton>
-          </SignedOut>
-          <SignedIn>
+
+            </Link>
+          ) : (
             <Link to='/dashboard'>
               <button className={button({ variant: "solid", color: "primary" })}>
                 Dashboard
               </button>
             </Link>
-          </SignedIn>
+          )}
+
         </div>
       </div>
       <div

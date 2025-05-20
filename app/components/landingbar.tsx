@@ -3,9 +3,13 @@ import { container, flex, hstack } from "carbonyxation/patterns";
 import { button } from "./button";
 import SmallLogo from "../assets/logo_64x.png";
 import { Link } from "react-router";
-import { SignedOut, SignedIn, SignUpButton } from "@clerk/react-router";
 
-export default function LandingBar() {
+interface Props {
+  user: any
+  signUpUrl: string
+}
+
+export default function LandingBar({ user, signUpUrl }: Props) {
   return (
     <nav
       className={css({
@@ -54,8 +58,8 @@ export default function LandingBar() {
           >
             Contact Us
           </button>
-          <SignedOut>
-            <SignUpButton>
+          {!user ? (
+            <Link to={signUpUrl}>
               <button
                 className={button({
                   color: "primary",
@@ -63,9 +67,8 @@ export default function LandingBar() {
               >
                 Sign Up
               </button>
-            </SignUpButton>
-          </SignedOut>
-          <SignedIn>
+            </Link>
+          ) : (
             <Link to='/dashboard'>
               <button className={button({
                 color: "primary"
@@ -73,7 +76,7 @@ export default function LandingBar() {
                 Dashboard
               </button>
             </Link>
-          </SignedIn>
+          )}
         </div>
       </div>
     </nav>

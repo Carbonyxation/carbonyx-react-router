@@ -3,7 +3,6 @@ import { flex, grid, vstack, hstack } from "carbonyxation/patterns";
 import { button } from "~/components/button";
 import Bg from "~/assets/authbg.jpg";
 import SmallLogo from "~/assets/logo_64x.png";
-import { SignUp } from "@clerk/react-router";
 
 export default function SignUpPage() {
   return (
@@ -78,7 +77,7 @@ export default function SignUpPage() {
             width: "24rem",
           })}
         >
-          <SignUp />
+          <span>Sign up</span>
         </div>
       </div>
     </div>

@@ -1,6 +1,5 @@
 import SmallLogo from "~/assets/logo_64x.png";
 import { MenuItem, MenuSection } from "../menuitem";
-import { OrganizationSwitcher, UserButton, useAuth } from "@clerk/react-router";
 import { Menu, X } from 'lucide-react'
 import { lazy, Suspense, useEffect, useState } from "react";
 import NotificationBox from "../notification-box";

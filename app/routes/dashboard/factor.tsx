@@ -12,92 +12,100 @@ import {
   FactorForm,
 } from "~/components/factor-input";
 
-import { getAuth } from '@clerk/react-router/ssr.server'
 import { redirect } from "react-router";
 
-export async function loader(args: Route.LoaderArgs) {
-  const auth = await getAuth(args)
-  if (!auth.orgId) {
-    return redirect('/')
-  }
+import { authkitLoader, getWorkOS } from "@workos-inc/authkit-react-router";
 
-  // Get all central factors
-  const centralFactors = await db.select().from(factors);
-
-  // Get all organization's factors (both overrides and custom)
-  const orgFactorsData = await db
-    .select()
-    .from(orgFactors)
-    .where(eq(orgFactors.orgId, auth.orgId));
-
-  // Create a map of overrides by originalFactorId for quick lookup
-  const overrideMap = new Map();
-  orgFactorsData.forEach(orgFactor => {
-    if (orgFactor.originalFactorId) {
-      overrideMap.set(orgFactor.originalFactorId, orgFactor);
+export const loader = (args: Route.LoaderArgs) =>
+  authkitLoader(args, async ({ request, auth }) => {
+    if (!auth.organizationId) {
+      return redirect('/')
     }
-  });
 
-  // Create the combined list with correct IDs
-  const availableFactors = [];
+    // Get all central factors
+    const centralFactors = await db.select().from(factors);
 
-  // Add central factors (with overrides applied if they exist)
-  centralFactors.forEach(centralFactor => {
-    const override = overrideMap.get(centralFactor.id);
+    // Get all organization's factors (both overrides and custom)
+    const orgFactorsData = await db
+      .select()
+      .from(orgFactors)
+      .where(eq(orgFactors.orgId, auth.orgId));
 
-    if (override) {
-      // There's an override - use the override data but keep the central ID
-      availableFactors.push({
-        id: centralFactor.id,  // Keep the central factor ID
-        name: override.name,
-        type: override.type,
-        subType: override.subType,
-        unit: override.unit,
-        factor: override.factor,
-        factorSource: 0,  // Mark as central (even though it's showing override data)
-        isOverridden: true,  // Add a flag to indicate it's an override
-        orgFactorId: override.id  // Store the org factor ID for edit/delete operations
-      });
-    } else {
-      // No override - use the central factor as is
-      availableFactors.push({
-        id: centralFactor.id,
-        name: centralFactor.name,
-        type: centralFactor.type,
-        subType: centralFactor.subType,
-        unit: centralFactor.unit,
-        factor: centralFactor.factor,
-        factorSource: 0,
-        isOverridden: false
-      });
-    }
-  });
-
-  // Add custom org factors (ones that don't override central factors)
-  orgFactorsData
-    .filter(orgFactor => !orgFactor.originalFactorId)
-    .forEach(customOrgFactor => {
-      availableFactors.push({
-        id: customOrgFactor.id,
-        name: customOrgFactor.name,
-        type: customOrgFactor.type,
-        subType: customOrgFactor.subType,
-        unit: customOrgFactor.unit,
-        factor: customOrgFactor.factor,
-        factorSource: 1,
-        isCustom: true
-      });
+    // Create a map of overrides by originalFactorId for quick lookup
+    const overrideMap = new Map();
+    orgFactorsData.forEach(orgFactor => {
+      if (orgFactor.originalFactorId) {
+        overrideMap.set(orgFactor.originalFactorId, orgFactor);
+      }
     });
 
-  return { availableFactors };
-}
+    // Create the combined list with correct IDs
+    const availableFactors = [];
+
+    // Add central factors (with overrides applied if they exist)
+    centralFactors.forEach(centralFactor => {
+      const override = overrideMap.get(centralFactor.id);
+
+      if (override) {
+        // There's an override - use the override data but keep the central ID
+        availableFactors.push({
+          id: centralFactor.id,  // Keep the central factor ID
+          name: override.name,
+          type: override.type,
+          subType: override.subType,
+          unit: override.unit,
+          factor: override.factor,
+          factorSource: 0,  // Mark as central (even though it's showing override data)
+          isOverridden: true,  // Add a flag to indicate it's an override
+          orgFactorId: override.id  // Store the org factor ID for edit/delete operations
+        });
+      } else {
+        // No override - use the central factor as is
+        availableFactors.push({
+          id: centralFactor.id,
+          name: centralFactor.name,
+          type: centralFactor.type,
+          subType: centralFactor.subType,
+          unit: centralFactor.unit,
+          factor: centralFactor.factor,
+          factorSource: 0,
+          isOverridden: false
+        });
+      }
+    });
+
+    // Add custom org factors (ones that don't override central factors)
+    orgFactorsData
+      .filter(orgFactor => !orgFactor.originalFactorId)
+      .forEach(customOrgFactor => {
+        availableFactors.push({
+          id: customOrgFactor.id,
+          name: customOrgFactor.name,
+          type: customOrgFactor.type,
+          subType: customOrgFactor.subType,
+          unit: customOrgFactor.unit,
+          factor: customOrgFactor.factor,
+          factorSource: 1,
+          isCustom: true
+        });
+      });
+
+    return { availableFactors, orgId: auth.organizationId };
+  })
 
 export async function action(args: Route.ActionArgs) {
+  const resp = await authkitLoader({
+    request: args.request,
+    params: {},
+    context: {}
+  })
+
+  const { organizationId } = resp.data
+  const orgId = organizationId
+
   const { request } = args;
   const formData = await request.formData();
   const intent = formData.get("intent");
-  const auth = await getAuth(args);
-  const orgId = auth.orgId
 
   if (!orgId) {
     return { success: false, message: "Organization ID is required" };
@@ -368,7 +376,7 @@ export default function FactorRoute() {
       toast.error("Cannot delete this factor");
       return;
     }
-    
+
     const formData = new FormData();
     formData.append("intent", "delete");
     formData.append("id", idToDelete.toString());
@@ -422,15 +430,15 @@ export default function FactorRoute() {
         data={factorData}
         onEditStart={handleEditStart}
         onDelete={(item) => {
-	  console.log("O:", item)
+          console.log("O:", item)
           // Only allow deletion of organization factors, not central ones
           if (item.factorSource === 0 && !item.isOverridden) {
             toast.error("Cannot delete central factors");
             return;
           }
-	  if(confirm("Are you sure you want to delete this factor?")) {
+          if (confirm("Are you sure you want to delete this factor?")) {
             handleDelete(item);
-	  }
+          }
         }}
       />
     </div>

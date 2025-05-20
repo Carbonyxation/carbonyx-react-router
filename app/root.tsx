@@ -12,10 +12,10 @@ import stylesheet from "./app.css?url";
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 
-import { rootAuthLoader } from "@clerk/react-router/ssr.server";
-import { ClerkProvider } from "@clerk/react-router";
 import { Toaster } from 'sonner'
-import { css } from "carbonyxation/css";
+
+import '@radix-ui/themes/styles.css';
+import '@workos-inc/widgets/styles.css';
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.bunny.net" },
@@ -29,10 +29,6 @@ export const links: Route.LinksFunction = () => [
   },
   { rel: "stylesheet", href: stylesheet },
 ];
-
-export async function loader(args: Route.LoaderArgs) {
-  return rootAuthLoader(args);
-}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -54,14 +50,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App({ loaderData }: Route.ComponentProps) {
   return (
-    <ClerkProvider
-      loaderData={loaderData}
-      signUpFallbackRedirectUrl="/"
-      signInFallbackRedirectUrl="/"
-    >
+    <>
       <Toaster richColors={true} />
       <Outlet />
-    </ClerkProvider>
+    </>
   );
 }
 

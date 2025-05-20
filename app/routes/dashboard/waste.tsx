@@ -18,63 +18,68 @@ import {
   type CollectedDataWithEmission,
 } from "~/db/schema";
 import type { Route } from "./+types/electricity";
-import { getAuth } from "@clerk/react-router/ssr.server";
+import { authkitLoader, getWorkOS } from "@workos-inc/authkit-react-router";
+import { redirect } from "react-router";
 
 const factorType = "waste"; // Set the factor type here
 
-export async function loader(args: Route.LoaderArgs) {
-  const auth = await getAuth(args);
-  const orgId = auth.orgId!;
-  const wasteReleased = await db
-    .select()
-    .from(collectedData)
-    .innerJoin(factors, eq(collectedData.factorId, factors.id))
-    .where(and(eq(factors.type, factorType), eq(collectedData.orgId, orgId)));
+export const loader = (args: Route.LoaderArgs) =>
+  authkitLoader(args, async ({ request, auth }) => {
+    // if there is no current active org, redirect to onboarding to force set one active
+    if (!auth.organizationId) return redirect('/onboarding')
 
-  // Fetch available factors with 'factor' value
-  const availableFactors = await db
-    .select({
-      id: factors.id,
-      name: factors.name,
-      unit: factors.unit,
-      type: factors.type,
-      subType: factors.subType,
-      factor: factors.factor,
-    })
-    .from(factors)
-    .where(eq(factors.type, "waste"));
+    const orgId = auth.organizationId;
 
-  type SFUsageWithEmission = (typeof wasteReleased)[number] & {
-    totalEmission: number;
-  };
+    const wasteReleased = await db
+      .select()
+      .from(collectedData)
+      .innerJoin(factors, eq(collectedData.factorId, factors.id))
+      .where(and(eq(factors.type, factorType), eq(collectedData.orgId, orgId)));
 
-  const sf_usage_with_emission: SFUsageWithEmission[] = wasteReleased.map(
-    (data) => {
-      const factor =
-        availableFactors.find((f) => f.id === data.collected_data.factorId)
-          ?.factor || 0;
-      return {
-        ...data,
-        recordedFactor: factor,
-        totalEmission:
-          Math.round(
-            (data.collected_data.value * factor + Number.EPSILON) * 100,
-          ) / 100,
-      };
-    },
-  );
+    // Fetch available factors with 'factor' value
+    const availableFactors = await db
+      .select({
+        id: factors.id,
+        name: factors.name,
+        unit: factors.unit,
+        type: factors.type,
+        subType: factors.subType,
+        factor: factors.factor,
+      })
+      .from(factors)
+      .where(eq(factors.type, "waste"));
 
-  const formattedData = sf_usage_with_emission.map((item) => {
-    return {
-      ...item.collected_data,
-      type: item.factors.name,
-      recordedFactor: item.recordedFactor,
-      totalEmission: item.totalEmission,
+    type SFUsageWithEmission = (typeof wasteReleased)[number] & {
+      totalEmission: number;
     };
-  });
 
-  return { formattedData, availableFactors };
-}
+    const sf_usage_with_emission: SFUsageWithEmission[] = wasteReleased.map(
+      (data) => {
+        const factor =
+          availableFactors.find((f) => f.id === data.collected_data.factorId)
+            ?.factor || 0;
+        return {
+          ...data,
+          recordedFactor: factor,
+          totalEmission:
+            Math.round(
+              (data.collected_data.value * factor + Number.EPSILON) * 100,
+            ) / 100,
+        };
+      },
+    );
+
+    const formattedData = sf_usage_with_emission.map((item) => {
+      return {
+        ...item.collected_data,
+        type: item.factors.name,
+        recordedFactor: item.recordedFactor,
+        totalEmission: item.totalEmission,
+      };
+    });
+
+    return { formattedData, availableFactors };
+  }, { ensureSignedIn: true })
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();

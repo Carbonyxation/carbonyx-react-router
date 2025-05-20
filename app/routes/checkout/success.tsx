@@ -1,25 +1,34 @@
 import type { Route } from "./+types/success";
-import { getAuth } from "@clerk/react-router/ssr.server";
 
 import { redirect } from "react-router";
 import { STRIPE_CUSTOMER_ID_KV, syncStripeDataToKV } from "~/utils/kv";
 
-export async function loader(args: Route.LoaderArgs) {
-  const auth = await getAuth(args);
+import { authkitLoader, getWorkOS } from "@workos-inc/authkit-react-router";
 
-  if (!auth.userId || !auth.sessionId || !auth.orgId) {
-    throw redirect('/');
-  }
+export const loader = (args: Route.LoaderArgs) =>
+  authkitLoader(args, async ({ request, auth }) => {
+    // if there is no current active org, redirect to onboarding to force set one active
+    if (!auth.organizationId) return redirect('/onboarding')
 
-  const stripeCustomerId = await STRIPE_CUSTOMER_ID_KV.get(auth.orgId)
+    const wos = getWorkOS()
+    const orgList = await wos.userManagement.listOrganizationMemberships({
+      userId: auth.user.id,
+    })
 
-  if (!stripeCustomerId) {
+    // if no organizations exist on the user, navigate to onboarding. onboarding should set the first org created for the user as the main active one
+    if (orgList.data.length === 0) {
+      return redirect('/onboarding')
+    }
+
+    const stripeCustomerId = await STRIPE_CUSTOMER_ID_KV.get(auth.organizationId)
+
+    if (!stripeCustomerId) {
+      return redirect('/')
+    }
+
+    await syncStripeDataToKV(stripeCustomerId)
     return redirect('/')
-  }
-
-  await syncStripeDataToKV(stripeCustomerId)
-  return redirect('/')
-}
+  }, { ensureSignedIn: true })
 
 export default function SuccesCheckout() {
   return (

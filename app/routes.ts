@@ -15,6 +15,8 @@ export default [
   route("/api/chat", "routes/api/chat.tsx"),
   route("/api/stripe", "routes/api/stripe.tsx"),
 
+  route("/auth/callback", "routes/auth-callback.ts"),
+
   route("/onboarding", "routes/onboarding.tsx"),
   route("/checkout/success", "routes/checkout/success.tsx"),
   ...prefix("/dashboard", [

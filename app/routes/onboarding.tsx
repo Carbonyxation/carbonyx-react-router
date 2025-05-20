@@ -1,27 +1,58 @@
 import { css } from "carbonyxation/css";
 import { flex, vstack } from "carbonyxation/patterns";
-import { useUser, CreateOrganization } from "@clerk/react-router";
 
 import SmallLogo from "~/assets/logo_64x.png";
-import { useOrganizationList } from "@clerk/react-router";
 import { useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, redirect } from "react-router";
 
-export default function Onboarding() {
-  const orgList = useOrganizationList({ userMemberships: true });
+import { authkitLoader, getWorkOS, switchToOrganization } from "@workos-inc/authkit-react-router";
+import { WorkOsWidgets, OrganizationSwitcher } from "@workos-inc/widgets";
+
+import type { Route } from './+types/onboarding'
+
+export const loader = (args: Route.LoaderArgs) =>
+  authkitLoader(args, async ({ request, auth }) => {
+    const wos = getWorkOS()
+    const orgList = await wos.userManagement.listOrganizationMemberships({
+      userId: auth.user.id
+    })
+
+    if (orgList.data.length !== 0) {
+      if (auth.organizationId) {
+        return redirect('/dashboard')
+      }
+
+      return redirect('/') // tmp
+      // re-authenticate the user for them to be on an org
+    } else {
+      if (!auth.organizationId) {
+        return redirect('/')
+      }
+    }
+
+    const authToken = await wos.widgets.getToken({
+      userId: auth.user.id,
+      organizationId: auth.organizationId,
+      scopes: ['widgets:users-table:manage']
+    })
+
+    return { authToken }
+  }, { ensureSignedIn: true })
+
+export default function Onboarding({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (orgList.userMemberships.isFetching) return
-    if (orgList.userMemberships.data && orgList.userMemberships.count !== 0) {
-      navigate("/dashboard");
-      return;
-    }
-  }, [orgList.userMemberships.isFetching]);
+  })
+  //   if (orgList.userMemberships.isFetching) return
+  //   if (orgList.userMemberships.data && orgList.userMemberships.count !== 0) {
+  //     navigate("/dashboard");
+  //     return;
+  //   }
+  // }, [orgList.userMemberships.isFetching]);
 
-  const user = useUser();
+  // const user = useUser();
   return (
-    !orgList.userMemberships.isFetching &&
     <div
       className={vstack({
         alignItems: "center",
@@ -67,11 +98,14 @@ export default function Onboarding() {
               textAlign: "center",
             })}
           >
-            Welcome, {user.user?.firstName}
+            {/* Welcome, {user.user?.firstName} */}
           </span>
           <span>Let's get started with a fresh organization</span>
         </div>
-        <CreateOrganization />
+        <WorkOsWidgets>
+          <OrganizationSwitcher authToken={loaderData.authToken} switchToOrganization={switchToOrganization}>
+          </OrganizationSwitcher>
+        </WorkOsWidgets>
       </div>
     </div>
   );
