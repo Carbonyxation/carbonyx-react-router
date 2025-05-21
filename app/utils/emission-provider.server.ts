@@ -208,12 +208,12 @@ function formatFactorType(factorType: string): string {
   switch (factorType) {
     case "electricity":
       return "Electricity";
-    case "transportation":
-      return "Transportation";
+    case "mobile_combustion":
+      return "Mobile Combustion";
     case "stationary_combustion":
       return "Stationary Combustion";
-    case "waste":
-      return "Waste";
+    case "refrigerants":
+      return "Refrigerants";
     default:
       return factorType; // Return original if not found (or handle as needed)
   }
@@ -237,33 +237,32 @@ async function getEmissionData(
   const periodFormat = monthly ? "%Y-%m" : "%Y";
 
   const emissionDataQuery = db
-  .select({
-    name: combinedFactorsView.type,
-    period: sql`strftime(${periodFormat}, ${
-      collectedData.timestamp
-    }, 'unixepoch')`.as("period"),
-    totalEmission:
-      sql<number>`sum(${collectedData.value} * ${collectedData.recordedFactor})`.as(
-        "total_emission",
-      ),
-  })
-  .from(collectedData)
-  .innerJoin(
-    combinedFactorsView, 
-    and(
-      eq(collectedData.factorId, combinedFactorsView.id),
-      eq(collectedData.isOrgFactor, combinedFactorsView.isOrgFactor)
+    .select({
+      name: combinedFactorsView.type,
+      period: sql`strftime(${periodFormat}, ${collectedData.timestamp
+        }, 'unixepoch')`.as("period"),
+      totalEmission:
+        sql<number>`sum(${collectedData.value} * ${collectedData.recordedFactor})`.as(
+          "total_emission",
+        ),
+    })
+    .from(collectedData)
+    .innerJoin(
+      combinedFactorsView,
+      and(
+        eq(collectedData.factorId, combinedFactorsView.id),
+        eq(collectedData.isOrgFactor, combinedFactorsView.isOrgFactor)
+      )
     )
-  )
-  .where(
-    and(
-      eq(collectedData.orgId, orgId),
-      between(collectedData.timestamp, startDate, endDate),
-    ),
-  )
-  .groupBy(combinedFactorsView.type, sql`period`)
-  .orderBy(sql`period`);
-  
+    .where(
+      and(
+        eq(collectedData.orgId, orgId),
+        between(collectedData.timestamp, startDate, endDate),
+      ),
+    )
+    .groupBy(combinedFactorsView.type, sql`period`)
+    .orderBy(sql`period`);
+
   const emissionData = await emissionDataQuery;
 
   // Group data by emission source (factor type)
@@ -388,11 +387,11 @@ function getBackgroundColor(label: string): string {
   switch (formattedLabel) {
     case "Electricity":
       return "rgba(75, 192, 192, 0.2)";
-    case "Transportation":
+    case "Mobile Combustion":
       return "rgba(255, 206, 86, 0.2)";
     case "Stationary Combustion":
       return "rgba(54, 162, 235, 0.2)";
-    case "Waste":
+    case "Refrigerants":
       return "rgba(255, 99, 132, 0.2)";
     case "Carbon Offset Purchases":
       return "rgba(0, 128, 0, 0.2)";
@@ -519,7 +518,7 @@ async function provideData(orgId: string): Promise<DataOutput> {
 
   // Yearly Calculations
   const latestYearlyGrossEmissionsTonnes =
-	yearlyGrossEmissions.length > 0
+    yearlyGrossEmissions.length > 0
       ? yearlyGrossEmissions.at(-1)!.emissions / 1000
       : 0;
 
