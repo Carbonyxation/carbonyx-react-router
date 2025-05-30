@@ -15,7 +15,7 @@ import {
 import { Await } from "react-router";
 import { button } from "~/components/button";
 
-import MonthYearRangePicker, { type DateOption, type DateRange } from "~/components/monthyearpicker";
+import MonthYearRangePicker,{ type DateOption, type DateRange } from "~/components/monthyearpicker";
 import { format } from "date-fns";
 import { getAuth } from "~/utils/auth-helper";
 
