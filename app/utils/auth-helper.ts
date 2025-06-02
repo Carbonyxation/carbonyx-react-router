@@ -5,7 +5,7 @@ import { redirect } from "react-router";
 export async function getAuth(args: LoaderFunctionArgs) {
   const auth = await getAuthClerk(args);
 
-  if (!auth.sessionId || !auth.orgId) {
+  if (!auth.sessionId) {
     throw redirect("/signin");
   }
 
