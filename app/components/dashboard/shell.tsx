@@ -2,44 +2,23 @@ import SmallLogo from "~/assets/logo_64x.png";
 import { MenuItem, MenuSection } from "../menuitem";
 import { OrganizationSwitcher, UserButton, useAuth } from "@clerk/react-router";
 import { Menu, X } from "lucide-react";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import NotificationBox from "../notification-box";
 import { useStore } from "~/stores";
 
-import { useRevalidator, useLocation, Link, Outlet } from "react-router";
+import { useRevalidator, Link, Outlet } from "react-router";
 import { css } from "carbonyxation/css";
 import { hstack, flex } from "carbonyxation/patterns";
 
-const BubbleChat = lazy(() =>
-  import("flowise-embed-react").then((module) => ({
-    default: module.BubbleChat,
-  })),
-);
-
 export default function Shell() {
   // Calculate the header height (assuming padding: "4" is 16px on each side, total 32px + assumed content height of 24px)
-  const headerHeight = "65px"; // **Adjust this value to your actual header height**
+  const headerHeight = "65px";
   const [displayMenu, setDisplayMenu] = useState(false);
   const auth = useAuth();
   const [currentOrgId, setCurrentOrgId] = useState("");
   const { revalidate } = useRevalidator();
-  const [renderBubble, setRenderBubble] = useState(true);
-  const location = useLocation();
-  const [isBrowser, setIsBrowser] = useState(false);
 
   const subscriptionPlan = useStore((state) => state.subscriptionPlan);
-
-  useEffect(() => {
-    setIsBrowser(true);
-  }, []);
-
-  useEffect(() => {
-    if (location.pathname.startsWith("/dashboard/notebook")) {
-      setRenderBubble(false);
-    } else {
-      setRenderBubble(true);
-    }
-  }, [location.pathname]);
 
   useEffect(() => {
     if (!auth.isLoaded || !auth.isSignedIn) return;
@@ -213,68 +192,6 @@ export default function Shell() {
         >
           <Outlet />
         </div>
-        {renderBubble && isBrowser && (
-          <Suspense fallback={<div></div>}>
-            <BubbleChat
-              chatflowid="carbonyx"
-              apiHost="/api/flowise"
-              theme={{
-                button: {
-                  backgroundColor: "#496a57",
-                  right: 20,
-                  bottom: 20,
-                  size: 48,
-                  dragAndDrop: true,
-                  iconColor: "white",
-                },
-                chatWindow: {
-                  showTitle: true,
-                  showAgentMessages: true,
-                  title: "ถามปลื้ม",
-                  titleTextColor: "#ffffff",
-                  welcomeMessage:
-                    "สวัสดีครับ ผมชื่อปลื้ม ถามคำถามเกี่ยวกับคาร์บอนกับผมได้เลยนะ",
-                  height: 900,
-                  fontSize: 14,
-                  width: 500,
-                  textInput: {
-                    placeholder: "สงสัยอะไรหรอ",
-                    backgroundColor: "#ffffff",
-                    textColor: "#303235",
-                    sendButtonColor: "#3B81F6",
-                    autoFocus: true,
-                  },
-                  botMessage: {
-                    backgroundColor: "#f7f5ef",
-                    textColor: "#303235",
-                    showAvatar: true,
-                    avatarSrc:
-                      "https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/parroticon.png",
-                  },
-                  starterPrompts: [
-                    "วิเคราะห์การปลดปล่อยคาร์บอนภายในองค์กรให้หน่อย",
-                    "มีส่วนไหนที่ปล่อยคาร์บอนเยอะเกินไปไหม ลดยังไงได้บ้าง",
-                    "ตอนนี้เทรนด์คาร์บอนมีอะไรเกิดขึ้นบ้าง",
-                  ],
-                  userMessage: {
-                    backgroundColor: "#496a57",
-                    textColor: "#ffffff",
-                    showAvatar: true,
-                    avatarSrc:
-                      "https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/usericon.png",
-                  },
-
-                  footer: {
-                    textColor: "#303235",
-                    text: "Made with ❤️ by",
-                    company: "Carbonyx",
-                    companyLink: "https://carbonyx.chanakancloud.net/",
-                  },
-                },
-              }}
-            />
-          </Suspense>
-        )}
       </div>
     </div>
   );
