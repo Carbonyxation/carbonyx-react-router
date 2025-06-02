@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "prepare": "husky",
+    "prepare": "husky && panda codegen",
     "build": "react-router build",
     "dev": "concurrently --kill-others \"react-router dev\" \"stripe listen --forward-to localhost:5173 --load-from-webhooks-api\"",
     "start": "react-router-serve ./build/server/index.js",
