@@ -5,32 +5,50 @@ import {
   integer,
   real,
   index,
-  union
+  union,
 } from "drizzle-orm/sqlite-core";
-import { sql } from 'drizzle-orm'
+import { sql } from "drizzle-orm";
 
 // Central Factors data for the organization
-export const factors = sqliteTable("factors", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  name: text("name").notNull(),
-  type: text("type").notNull(),
-  subType: text("sub_type"),
-  unit: text("unit").notNull(),
-  factor: real("factor").notNull(),
-});
+export const factors = sqliteTable(
+  "factors",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    name: text("name").notNull(),
+    type: text("type").notNull(),
+    subType: text("sub_type"),
+    unit: text("unit").notNull(),
+    factor: real("factor").notNull(),
+  },
+  (table) => [
+    index("factors_lookup_id_idx").on(table.id, table.type),
+    index("factors_type_idx").on(table.type),
+  ],
+);
 
 // organization-specific factor data
-export const orgFactors = sqliteTable("org_factors", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  orgId: text("org_id").notNull(),
-  originalFactorId: integer("original_factor_id").references(() => factors.id),
-  name: text("name").notNull(),
-  type: text("type").notNull(),
-  subType: text("sub_type").notNull(),
-  unit: text("unit").notNull(),
-  factor: real("factor").notNull(),
-  isCustom: integer("is_custom", { mode: 'boolean' }).notNull().default(false)
-});
+export const orgFactors = sqliteTable(
+  "org_factors",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    orgId: text("org_id").notNull(),
+    originalFactorId: integer("original_factor_id").references(
+      () => factors.id,
+    ),
+    name: text("name").notNull(),
+    type: text("type").notNull(),
+    subType: text("sub_type").notNull(),
+    unit: text("unit").notNull(),
+    factor: real("factor").notNull(),
+    isCustom: integer("is_custom", { mode: "boolean" })
+      .notNull()
+      .default(false),
+  },
+  (table) => [
+    index("org_factors_idx").on(table.id, table.orgId, table.type),
+    index("org_factors_type").on(table.type),
+  ],
+);
 
 // Define the collectedData table
 export const collectedData = sqliteTable(
@@ -43,7 +61,9 @@ export const collectedData = sqliteTable(
     factorId: integer("factor_id")
       .notNull()
       .references(() => factors.id), // Define foreign key inline
-    isOrgFactor: integer("is_org_factor", { mode: 'boolean' }).notNull().default(false),
+    isOrgFactor: integer("is_org_factor", { mode: "boolean" })
+      .notNull()
+      .default(false),
     recordedFactor: integer("recorded_factor").notNull(),
     value: integer("value").notNull(),
     timestamp: integer("timestamp")
@@ -51,9 +71,13 @@ export const collectedData = sqliteTable(
       .$defaultFn(() => (Date.now() / 1000) | 0),
   },
   (table) => [
-    index("collected_data_org_id_idx").on(table.orgId),
-    index("collected_data_factor_id_idx").on(table.factorId),
-    index("collected_data_timestamp_idx").on(table.timestamp),
+    index("collected_data_org_timestamp_idx").on(table.orgId, table.timestamp),
+    index("collected_data_factor_lookup").on(table.factorId, table.isOrgFactor),
+    index("collected_data_join").on(
+      table.factorId,
+      table.isOrgFactor,
+      table.orgId,
+    ),
   ],
 );
 
@@ -66,7 +90,7 @@ export const assets = sqliteTable("assets", {
     .notNull()
     .references(() => factors.id),
   unit: text("unit").notNull(),
-  conversion_rate: real("conversion_rate").notNull()
+  conversion_rate: real("conversion_rate").notNull(),
 });
 
 export const assetsData = sqliteTable(
@@ -83,7 +107,7 @@ export const assetsData = sqliteTable(
     recordedFactor: integer("recorded_factor").notNull(),
     timestamp: integer("timestamp")
       .notNull()
-      .$defaultFn(() => (Date.now() / 1000) | 0)
+      .$defaultFn(() => (Date.now() / 1000) | 0),
   },
   (table) => [
     index("asset_data_org_id_idx").on(table.orgId),
@@ -119,46 +143,48 @@ export const notebook = sqliteTable(
     name: text("name").notNull(),
     orgId: text("org_id").notNull(),
     userId: text("user_id").notNull(),
-    shared: integer("shared", { mode: 'boolean' }),
+    shared: integer("shared", { mode: "boolean" }),
     timestamp: integer("timestamp")
       .notNull()
-      .$defaultFn(() => (Date.now() / 1000) | 0)
+      .$defaultFn(() => (Date.now() / 1000) | 0),
   },
   (table) => [
     index("notebook_org_id_idx").on(table.orgId),
-    index("notebook_timestamp_idx").on(table.timestamp)
-  ]
-)
+    index("notebook_timestamp_idx").on(table.timestamp),
+  ],
+);
 
-export const combinedFactorsView = sqliteView("combined_factors_view").as((qb) => {
-  const centralFactors = qb
-    .select({
-      id: factors.id,
-      factorOrgId: sql`NULL`.as("factor_org_id"),
-      name: factors.name,
-      type: factors.type,
-      subType: factors.subType,
-      unit: factors.unit,
-      factor: factors.factor,
-      factorSource: sql`0`.as("factor_source"),
-    })
-    .from(factors);
+export const combinedFactorsView = sqliteView("combined_factors_view").as(
+  (qb) => {
+    const centralFactors = qb
+      .select({
+        id: factors.id,
+        factorOrgId: sql`NULL`.as("factor_org_id"),
+        name: factors.name,
+        type: factors.type,
+        subType: factors.subType,
+        unit: factors.unit,
+        factor: factors.factor,
+        factorSource: sql`0`.as("factor_source"),
+      })
+      .from(factors);
 
-  const orgSpecificFactors = qb
-    .select({
-      id: orgFactors.id,
-      factorOrgId: orgFactors.orgId,
-      name: orgFactors.name,
-      type: orgFactors.type,
-      subType: orgFactors.subType,
-      unit: orgFactors.unit,
-      factor: orgFactors.factor,
-      factorSource: sql`1`.as("factor_source"),
-    })
-    .from(orgFactors);
+    const orgSpecificFactors = qb
+      .select({
+        id: orgFactors.id,
+        factorOrgId: orgFactors.orgId,
+        name: orgFactors.name,
+        type: orgFactors.type,
+        subType: orgFactors.subType,
+        unit: orgFactors.unit,
+        factor: orgFactors.factor,
+        factorSource: sql`1`.as("factor_source"),
+      })
+      .from(orgFactors);
 
-  return union(centralFactors, orgSpecificFactors);
-});
+    return union(centralFactors, orgSpecificFactors);
+  },
+);
 
 export type Notebook = typeof notebook.$inferSelect;
 

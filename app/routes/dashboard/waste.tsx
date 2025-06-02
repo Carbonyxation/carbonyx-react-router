@@ -134,7 +134,8 @@ export default function WasteInputPage() {
   const submit = useSubmit();
 
   const [data, setData] = useState(formattedData);
-  const [editingData, setEditingData] = useState<DataInputProps["editingData"]>(null);
+  const [editingData, setEditingData] =
+    useState<DataInputProps["editingData"]>(null);
 
   useEffect(() => {
     if (navigation.state === "idle" && actionData?.success) {
@@ -156,7 +157,8 @@ export default function WasteInputPage() {
             recordedFactor: factor,
             totalEmission:
               Math.round(
-                (actionData.updatedRecord.value * factor + Number.EPSILON) * 100,
+                (actionData.updatedRecord.value * factor + Number.EPSILON) *
+                  100,
               ) / 100,
           };
           return [...prev, newRecord];
@@ -178,7 +180,8 @@ export default function WasteInputPage() {
                 recordedFactor: factor,
                 totalEmission:
                   Math.round(
-                    (actionData.updatedRecord.value * factor + Number.EPSILON) * 100,
+                    (actionData.updatedRecord.value * factor + Number.EPSILON) *
+                      100,
                   ) / 100,
               };
             }
@@ -303,4 +306,3 @@ export default function WasteInputPage() {
     </div>
   );
 }
-

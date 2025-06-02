@@ -1,13 +1,13 @@
 import { css } from "carbonyxation/css";
 import { flex, hstack } from "carbonyxation/patterns";
 
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { MenuItem } from "~/components/menuitem";
 
 import { Outlet, useLocation } from "react-router";
 
 export default function Settings() {
-  const location = useLocation()
+  const location = useLocation();
   return (
     <div
       className={flex({
@@ -18,9 +18,11 @@ export default function Settings() {
         h: "full",
       })}
     >
-      <div className={hstack({
-        justifyContent: "space-between"
-      })}>
+      <div
+        className={hstack({
+          justifyContent: "space-between",
+        })}
+      >
         <span
           className={css({
             fontSize: "xl",
@@ -31,25 +33,36 @@ export default function Settings() {
         </span>
       </div>
 
-      <PanelGroup direction="horizontal" className={css({
-        bg: 'white',
-        rounded: '2xl',
-        border: '1px black solid',
-      })}>
+      <PanelGroup
+        direction="horizontal"
+        className={css({
+          bg: "white",
+          rounded: "2xl",
+          border: "1px black solid",
+        })}
+      >
         <Panel minSize={25} defaultSize={25} maxSize={50}>
           <MenuItem text="Organization" icon="assets" pad={2}>
-            <MenuItem text="Billing" icon="money" pad={2} route="/dashboard/settings/organization/billing" />
+            <MenuItem
+              text="Billing"
+              icon="money"
+              pad={2}
+              route="/dashboard/settings/organization/billing"
+            />
           </MenuItem>
         </Panel>
-        <PanelResizeHandle className={css({
-          borderColor: "black",
-          borderWidth: .5
-        })} />
+        <PanelResizeHandle
+          className={css({
+            borderColor: "black",
+            borderWidth: 0.5,
+          })}
+        />
         <Panel defaultSize={75}>
-          {!location.pathname.replaceAll("/", "").endsWith("settings") && <Outlet />}
+          {!location.pathname.replaceAll("/", "").endsWith("settings") && (
+            <Outlet />
+          )}
         </Panel>
       </PanelGroup>
     </div>
-
-  )
+  );
 }

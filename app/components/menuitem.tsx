@@ -6,7 +6,21 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 
 interface MenuItemProps {
-  icon?: "home" | "information" | "history" | "circle" | "question" | "gear" | "emissions" | "assets" | "integration" | "custom_factor" | "location" | "comment" | "none" | "money";
+  icon?:
+    | "home"
+    | "information"
+    | "history"
+    | "circle"
+    | "question"
+    | "gear"
+    | "emissions"
+    | "assets"
+    | "integration"
+    | "custom_factor"
+    | "location"
+    | "comment"
+    | "none"
+    | "money";
   text: string;
   route?: string;
   children?: React.ReactNode;
@@ -55,27 +69,27 @@ export function MenuItem({
   children,
   level = 0,
   exact = false,
-  pad = 1
+  pad = 1,
 }: MenuItemProps) {
-  const location = useLocation()
+  const location = useLocation();
   const currentRoute = location.pathname;
   const [isOpen, setIsOpen] = useState(false);
 
-  const hasChildren = Boolean(children)
+  const hasChildren = Boolean(children);
 
   // Check if this item or any of its children is active
-  const isActive = route && (
-    exact
+  const isActive =
+    route &&
+    (exact
       ? currentRoute === route
-      : currentRoute.startsWith(route) && (
+      : currentRoute.startsWith(route) &&
         // Check that the next character is a slash or the end of the string
-        currentRoute.length === route.length ||
-        currentRoute.charAt(route.length) === '/'
-      )
-  );
+        (currentRoute.length === route.length ||
+          currentRoute.charAt(route.length) === "/"));
 
   // Automatically open submenu if a child is active
-  const isChildActive = currentRoute.startsWith(route || '') && currentRoute !== route;
+  const isChildActive =
+    currentRoute.startsWith(route || "") && currentRoute !== route;
 
   useEffect(() => {
     if (isChildActive) {
@@ -92,7 +106,7 @@ export function MenuItem({
           justifyContent: "center",
           alignItems: "center",
           fontSize: "sm",
-          p: pad
+          p: pad,
         })}
       >
         {getIcon(icon)}
@@ -108,7 +122,12 @@ export function MenuItem({
         {text}
       </div>
       {hasChildren && (
-        <div className={css({ transform: isOpen ? "rotate(90deg)" : "none", transition: "transform 0.3s" })}>
+        <div
+          className={css({
+            transform: isOpen ? "rotate(90deg)" : "none",
+            transition: "transform 0.3s",
+          })}
+        >
           <i className="fa-solid fa-angle-right" />
         </div>
       )}
@@ -127,7 +146,7 @@ export function MenuItem({
         borderBottomColor: "neutral.400",
         position: "relative",
         overflow: "hidden",
-        bg: 'white',
+        bg: "white",
         _before: {
           content: "''",
           position: "absolute",

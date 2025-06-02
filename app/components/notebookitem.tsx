@@ -9,18 +9,13 @@ interface NotebookItemProps {
   notebookId: string;
 }
 
-export function NotebookItem({
-  title,
-  date,
-  notebookId,
-}: NotebookItemProps) {
+export function NotebookItem({ title, date, notebookId }: NotebookItemProps) {
   const location = useLocation();
   const currentRoute = location.pathname;
 
   // Check if this item is active
-  const isActive = notebookId && (
-    currentRoute === `/dashboard/notebook/${notebookId}`
-  );
+  const isActive =
+    notebookId && currentRoute === `/dashboard/notebook/${notebookId}`;
 
   return (
     <Link
@@ -37,7 +32,7 @@ export function NotebookItem({
           borderBottomColor: "neutral.400",
           position: "relative",
           overflow: "hidden",
-          bg: 'white',
+          bg: "white",
           _before: {
             content: "''",
             position: "absolute",
@@ -80,16 +75,20 @@ export function NotebookItem({
             flex: 1,
           })}
         >
-          <div className={css({
-            fontSize: "sm",
-            fontWeight: isActive ? "bold" : "medium",
-          })}>
+          <div
+            className={css({
+              fontSize: "sm",
+              fontWeight: isActive ? "bold" : "medium",
+            })}
+          >
             {title}
           </div>
-          <div className={css({
-            fontSize: "xs",
-            color: "neutral.600",
-          })}>
+          <div
+            className={css({
+              fontSize: "xs",
+              color: "neutral.600",
+            })}
+          >
             {date}
           </div>
         </div>

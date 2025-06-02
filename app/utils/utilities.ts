@@ -44,10 +44,13 @@ export function categorizeDateByMonth(
 }
 
 export function getUrl(path?: string) {
-  if ((process && process.env.NODE_ENV === "DEVELOPMENT") || (import.meta.env && import.meta.env.DEV)) {
-    return 'http://localhost:5173' + path
+  if (
+    (process && process.env.NODE_ENV === "DEVELOPMENT") ||
+    (import.meta.env && import.meta.env.DEV)
+  ) {
+    return "http://localhost:5173" + path;
   } else {
-    return 'https://carbonyx.chanakancloud.net' + path
+    return "https://carbonyx.chanakancloud.net" + path;
   }
 }
 
@@ -62,4 +65,3 @@ export async function tryCatch<T, Args extends any[]>(
     return { result: null, error };
   }
 }
-

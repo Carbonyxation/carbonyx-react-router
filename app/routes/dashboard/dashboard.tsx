@@ -15,15 +15,18 @@ import {
 import { Await } from "react-router";
 import { button } from "~/components/button";
 
-import MonthYearRangePicker,{ type DateOption, type DateRange } from "~/components/monthyearpicker";
+import MonthYearRangePicker, {
+  type DateOption,
+  type DateRange,
+} from "~/components/monthyearpicker";
 import { format } from "date-fns";
 import { getAuth } from "~/utils/auth-helper";
 
 export function loader(args: Route.LoaderArgs) {
   const auth = getAuth(args);
-  const orgId = auth.then(auth => auth.orgId);
+  const orgId = auth.then((auth) => auth.orgId);
 
-  const data = orgId.then(id => provideData(id ?? ""));
+  const data = orgId.then((id) => provideData(id ?? ""));
 
   return data;
 }
@@ -47,18 +50,18 @@ export default function Dashboard({ loaderData: data }: Route.ComponentProps) {
     setDateRange(range);
 
     if (range.startDate && range.endDate) {
-      console.log('Range changed:', {
+      console.log("Range changed:", {
         startDate: range.startDate.value.toISOString(),
-        endDate: range.endDate.value.toISOString()
+        endDate: range.endDate.value.toISOString(),
       });
       // Do something with the selected range
     }
   };
 
   useEffect(() => {
-    validStartDateRef.current = dateRange.startDate?.date
-    validEndDateRef.current = dateRange.endDate?.date
-  }, [dateRange])
+    validStartDateRef.current = dateRange.startDate?.date;
+    validEndDateRef.current = dateRange.endDate?.date;
+  }, [dateRange]);
 
   // Set default start and end dates to the current year
   useEffect(() => {
@@ -70,20 +73,20 @@ export default function Dashboard({ loaderData: data }: Route.ComponentProps) {
     const startDateOption: DateOption = {
       date: initialStartDate,
       value: initialStartDate,
-      label: `From: ${format(initialStartDate, 'MMM yyyy')}`,
-      isStart: true
-    }
+      label: `From: ${format(initialStartDate, "MMM yyyy")}`,
+      isStart: true,
+    };
 
     const endDateOption: DateOption = {
       date: initialEndDate,
       value: initialEndDate,
-      label: `To: ${format(initialEndDate, 'MMM yyyy')}`
-    }
+      label: `To: ${format(initialEndDate, "MMM yyyy")}`,
+    };
 
     setDateRange({
       startDate: startDateOption,
-      endDate: endDateOption
-    })
+      endDate: endDateOption,
+    });
 
     validStartDateRef.current = initialStartDate;
     validEndDateRef.current = initialEndDate;
@@ -110,19 +113,21 @@ export default function Dashboard({ loaderData: data }: Route.ComponentProps) {
         .map((label) =>
           formatMonthYear(new Date(label + "-01").getTime() / 1000),
         );
-      const filteredMonths = dashboardData.monthly.allMonths.datasets.map((dataset) => ({
-        ...dataset,
-        data: dataset.data
-          .filter((d) => {
-            const date = new Date(d.month + "-01");
-            const timestamp = date.getTime() / 1000;
-            return timestamp >= startTimestamp && timestamp <= endTimestamp;
-          })
-          .map((d) => ({
-            x: formatMonthYear(new Date(d.month + "-01").getTime() / 1000),
-            y: d.emissions,
-          })),
-      }));
+      const filteredMonths = dashboardData.monthly.allMonths.datasets.map(
+        (dataset) => ({
+          ...dataset,
+          data: dataset.data
+            .filter((d) => {
+              const date = new Date(d.month + "-01");
+              const timestamp = date.getTime() / 1000;
+              return timestamp >= startTimestamp && timestamp <= endTimestamp;
+            })
+            .map((d) => ({
+              x: formatMonthYear(new Date(d.month + "-01").getTime() / 1000),
+              y: d.emissions,
+            })),
+        }),
+      );
       return {
         labels,
         datasets: filteredMonths,
@@ -134,20 +139,23 @@ export default function Dashboard({ loaderData: data }: Route.ComponentProps) {
         const yearEnd = new Date(year, 11, 31, 23, 59, 59).getTime() / 1000;
         return yearStart >= startTimestamp && yearEnd <= endTimestamp;
       });
-      const filteredYears = dashboardData.yearly.allYears.datasets.map((dataset) => ({
-        ...dataset,
-        data: dataset.data
-          .filter((d) => {
-            const year = parseInt(d.month);
-            const yearStart = new Date(year, 0, 1).getTime() / 1000;
-            const yearEnd = new Date(year, 11, 31, 23, 59, 59).getTime() / 1000;
-            return yearStart >= startTimestamp && yearEnd <= endTimestamp;
-          })
-          .map((d) => ({
-            x: d.month,
-            y: d.emissions,
-          })),
-      }));
+      const filteredYears = dashboardData.yearly.allYears.datasets.map(
+        (dataset) => ({
+          ...dataset,
+          data: dataset.data
+            .filter((d) => {
+              const year = parseInt(d.month);
+              const yearStart = new Date(year, 0, 1).getTime() / 1000;
+              const yearEnd =
+                new Date(year, 11, 31, 23, 59, 59).getTime() / 1000;
+              return yearStart >= startTimestamp && yearEnd <= endTimestamp;
+            })
+            .map((d) => ({
+              x: d.month,
+              y: d.emissions,
+            })),
+        }),
+      );
       return {
         labels,
         datasets: filteredYears,
@@ -165,9 +173,11 @@ export default function Dashboard({ loaderData: data }: Route.ComponentProps) {
         h: "full",
       })}
     >
-      <div className={hstack({
-        justifyContent: "space-between"
-      })}>
+      <div
+        className={hstack({
+          justifyContent: "space-between",
+        })}
+      >
         <span
           className={css({
             fontSize: "xl",
@@ -176,25 +186,29 @@ export default function Dashboard({ loaderData: data }: Route.ComponentProps) {
         >
           Emission Dashboard
         </span>
-        <div className={flex({
-          justifyContent: 'center',
-          alignItems: 'start',
-          gap: 4
-        })}>
-          <MonthYearRangePicker value={dateRange} onChange={handleRangeChange} />
+        <div
+          className={flex({
+            justifyContent: "center",
+            alignItems: "start",
+            gap: 4,
+          })}
+        >
+          <MonthYearRangePicker
+            value={dateRange}
+            onChange={handleRangeChange}
+          />
 
           <button
             onClick={() =>
               setMonthYear((prev) => (prev === "month" ? "year" : "month"))
             }
             className={button({
-              color: 'primary',
+              color: "primary",
             })}
           >
-            {monthYear === 'year' ? 'Toggle Monthly' : 'Toggle Yearly'}
+            {monthYear === "year" ? "Toggle Monthly" : "Toggle Yearly"}
           </button>
         </div>
-
       </div>
 
       <div className={hstack()}>
@@ -256,8 +270,6 @@ export default function Dashboard({ loaderData: data }: Route.ComponentProps) {
         </div>
         {/* Quick Select Buttons */}
         <div>
-
-
           {/*
           <button
             onClick={() => handleDateRangeSelect("thisYear")}
@@ -304,16 +316,12 @@ export default function Dashboard({ loaderData: data }: Route.ComponentProps) {
             Last 6 Months
           </button>
           */}
-
         </div>
       </div>
 
       {/* Use Suspense and Await for the data */}
       <Suspense fallback={<LoadingIndicators />}>
-        <Await
-          resolve={data}
-          errorElement={<ErrorDisplay />}
-        >
+        <Await resolve={data} errorElement={<ErrorDisplay />}>
           {(resolvedData) => (
             <>
               <div className={hstack()}>
@@ -420,7 +428,9 @@ function ErrorDisplay() {
   return (
     <div className={css({ p: 4, color: "red" })}>
       <h2>Error Loading Data</h2>
-      <p>There was a problem loading the dashboard data. Please try again later.</p>
+      <p>
+        There was a problem loading the dashboard data. Please try again later.
+      </p>
     </div>
   );
 }
@@ -428,17 +438,29 @@ function ErrorDisplay() {
 // Simple skeleton for indicators
 function IndicatorSkeleton() {
   return (
-    <div className={css({
-      w: "full",
-      p: 4,
-      bg: "gray-100",
-      rounded: "xl",
-      m: 2,
-      h: "6rem",
-      animation: "pulse 1.5s infinite"
-    })}>
-      <div className={css({ w: "70%", h: "1rem", bg: "gray-200", mb: 2, rounded: "md" })}></div>
-      <div className={css({ w: "40%", h: "2rem", bg: "gray-200", rounded: "md" })}></div>
+    <div
+      className={css({
+        w: "full",
+        p: 4,
+        bg: "gray-100",
+        rounded: "xl",
+        m: 2,
+        h: "6rem",
+        animation: "pulse 1.5s infinite",
+      })}
+    >
+      <div
+        className={css({
+          w: "70%",
+          h: "1rem",
+          bg: "gray-200",
+          mb: 2,
+          rounded: "md",
+        })}
+      ></div>
+      <div
+        className={css({ w: "40%", h: "2rem", bg: "gray-200", rounded: "md" })}
+      ></div>
     </div>
   );
 }

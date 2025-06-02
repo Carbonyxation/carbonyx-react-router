@@ -72,7 +72,7 @@ export default function Indicator({
                   fontSize: 12,
                   color:
                     (value > previous && valueTrend === "negative") ||
-                      (value < previous && valueTrend === "positive")
+                    (value < previous && valueTrend === "positive")
                       ? "red"
                       : "green",
                 })}

@@ -15,12 +15,12 @@ import { css } from "carbonyxation/css";
 import Switch from "~/components/switch";
 import { getSubTier } from "~/utils/subscription";
 
-import { toast } from 'sonner'
+import { toast } from "sonner";
 
 export async function loader(args: Route.LoaderArgs) {
-  const current_tier = await getSubTier(args)
+  const current_tier = await getSubTier(args);
 
-  return { current_tier }
+  return { current_tier };
 }
 
 export async function action(args: Route.ActionArgs) {
@@ -86,17 +86,17 @@ export async function action(args: Route.ActionArgs) {
 }
 
 const headerIcon = css({
-  color: 'green',
+  color: "green",
   fontSize: 24,
-})
+});
 
 const iconStyle = css({
-  color: 'green', // Set the fill color to green
+  color: "green", // Set the fill color to green
   marginRight: 2, // Optional: Adjust margin instead of using inline style
 });
 
 const featureList = css({
-  listStyle: 'none', // Remove default bullets
+  listStyle: "none", // Remove default bullets
   padding: 0, // Remove padding
   marginTop: 4, // Adjust as needed
   marginBottom: 4, // Adjust as needed
@@ -129,154 +129,222 @@ export default function Plans({ loaderData }: Route.ComponentProps) {
     form.remove();
   };
   return (
-    <div className={vstack({
-      justifyContent: 'center',
-      h: 'svh'
-    })}>
-      <div className={vstack({
-        justifyContent: 'center',
-        mb: 12
-      })}>
-        <span className={css({
-          fontSize: '4xl',
-          fontWeight: 'extrabold',
-          maxWidth: 'xl',
-          textAlign: 'center',
-        })}>Predictable Pricing for Sustainable Growth</span>
-        <span className={css({
-          fontSize: 'md',
-          color: 'neutral.600',
-        })}>Scale your sustainability efforts, not your carbon accounting costs</span>
+    <div
+      className={vstack({
+        justifyContent: "center",
+        h: "svh",
+      })}
+    >
+      <div
+        className={vstack({
+          justifyContent: "center",
+          mb: 12,
+        })}
+      >
+        <span
+          className={css({
+            fontSize: "4xl",
+            fontWeight: "extrabold",
+            maxWidth: "xl",
+            textAlign: "center",
+          })}
+        >
+          Predictable Pricing for Sustainable Growth
+        </span>
+        <span
+          className={css({
+            fontSize: "md",
+            color: "neutral.600",
+          })}
+        >
+          Scale your sustainability efforts, not your carbon accounting costs
+        </span>
       </div>
-      <Switch leftLabel="Monthly" rightLabel="Annually" defaultChecked={true} onChange={() => setRecurringType(recurringType === 'monthly' ? 'annually' : 'monthly')} />
-      <div className={flex({
-        flexDir: 'column',
-        gap: 4,
-        md: {
-          flexDir: 'row'
+      <Switch
+        leftLabel="Monthly"
+        rightLabel="Annually"
+        defaultChecked={true}
+        onChange={() =>
+          setRecurringType(recurringType === "monthly" ? "annually" : "monthly")
         }
-      })}>
-        <div className={flex({
-          flexDir: 'column',
-          p: 4,
-          border: '1px black solid',
-          rounded: 'xl',
-          bg: 'white',
-          width: '24rem',
-          boxShadowColor: 'accent.200',
-          boxShadow: 'xl'
-        })}>
-          <div className={hstack({
-            justifyContent: 'space-between'
-          })}>
-            <span className={css({
-              fontSize: 'xl',
-              fontWeight: 'bold',
-            })}>Standard</span>
+      />
+      <div
+        className={flex({
+          flexDir: "column",
+          gap: 4,
+          md: {
+            flexDir: "row",
+          },
+        })}
+      >
+        <div
+          className={flex({
+            flexDir: "column",
+            p: 4,
+            border: "1px black solid",
+            rounded: "xl",
+            bg: "white",
+            width: "24rem",
+            boxShadowColor: "accent.200",
+            boxShadow: "xl",
+          })}
+        >
+          <div
+            className={hstack({
+              justifyContent: "space-between",
+            })}
+          >
+            <span
+              className={css({
+                fontSize: "xl",
+                fontWeight: "bold",
+              })}
+            >
+              Standard
+            </span>
             <i className={`fa-solid fa-leaf ${headerIcon}`}></i>
           </div>
-          <div className={hstack({
-            gap: 2,
-          })}>
+          <div
+            className={hstack({
+              gap: 2,
+            })}
+          >
             <div>
-              <span className={css({
-                fontSize: '3xl',
-                fontWeight: 'bold'
-              })}>&#3647;{recurringType === 'annually' ? '40,000' : '4,000'}</span>
-              <span className={css({
-                color: 'neutral.600',
-                fontWeight: 'medium'
-              })}> / {recurringType === "annually" ? 'year' : 'month'}</span>
+              <span
+                className={css({
+                  fontSize: "3xl",
+                  fontWeight: "bold",
+                })}
+              >
+                &#3647;{recurringType === "annually" ? "40,000" : "4,000"}
+              </span>
+              <span
+                className={css({
+                  color: "neutral.600",
+                  fontWeight: "medium",
+                })}
+              >
+                {" "}
+                / {recurringType === "annually" ? "year" : "month"}
+              </span>
             </div>
-            {recurringType === 'annually' && <span className={css({
-              fontSize: 'sm',
-              bg: 'accent.200',
-              px: 2,
-              py: 1,
-              color: 'white',
-              rounded: 'lg',
-              fontWeight: 'bold',
-            })}>Save 16.67%</span>}
+            {recurringType === "annually" && (
+              <span
+                className={css({
+                  fontSize: "sm",
+                  bg: "accent.200",
+                  px: 2,
+                  py: 1,
+                  color: "white",
+                  rounded: "lg",
+                  fontWeight: "bold",
+                })}
+              >
+                Save 16.67%
+              </span>
+            )}
           </div>
-          <span className={css({
-            color: 'neutral.600',
-            mt: 2
-          })}>The only plan needed for most organizations and SMBs</span>
+          <span
+            className={css({
+              color: "neutral.600",
+              mt: 2,
+            })}
+          >
+            The only plan needed for most organizations and SMBs
+          </span>
           <ul className={featureList}>
-            <li style={{ display: 'flex', alignItems: 'center' }}>
+            <li style={{ display: "flex", alignItems: "center" }}>
               <i className={`fa-solid fa-circle-check ${iconStyle}`}></i>
               <span>One feature</span>
             </li>
-            <li style={{ display: 'flex', alignItems: 'center' }}>
+            <li style={{ display: "flex", alignItems: "center" }}>
               <i className={`fa-solid fa-circle-check ${iconStyle}`}></i>
               <span>Two feature</span>
             </li>
-            <li style={{ display: 'flex', alignItems: 'center' }}>
+            <li style={{ display: "flex", alignItems: "center" }}>
               <i className={`fa-solid fa-circle-check ${iconStyle}`}></i>
               <span>Three feature</span>
             </li>
-            <li style={{ display: 'flex', alignItems: 'center' }}>
+            <li style={{ display: "flex", alignItems: "center" }}>
               <i className={`fa-solid fa-circle-check ${iconStyle}`}></i>
               <span>Four feature</span>
             </li>
-            <li style={{ display: 'flex', alignItems: 'center' }}>
+            <li style={{ display: "flex", alignItems: "center" }}>
               <i className={`fa-solid fa-circle-check ${iconStyle}`}></i>
               <span>Five feature</span>
             </li>
-          </ul>          <button
+          </ul>{" "}
+          <button
             className={button({
               color: "accent",
-              disabled: loaderData.current_tier === 'Standard'
+              disabled: loaderData.current_tier === "Standard",
             })}
-            disabled={loaderData.current_tier === 'Standard'}
+            disabled={loaderData.current_tier === "Standard"}
             onClick={() => handleCheckoutPlan("standard")}
           >
-            {loaderData.current_tier === 'Standard' ? 'Subscribed' : 'Get Started'}
+            {loaderData.current_tier === "Standard"
+              ? "Subscribed"
+              : "Get Started"}
           </button>
-
         </div>
-        <div className={flex({
-          flexDir: 'column',
-          p: 4,
-          border: '1px black solid',
-          rounded: 'xl',
-          bg: 'white',
-          width: '24rem'
-        })}>
-          <span className={css({
-            fontSize: 'xl',
-            fontWeight: 'bold'
-          })}>Enterprise</span>
-          <div className={hstack({
-            gap: 2
-          })}>
-            <span className={css({
-              fontSize: '3xl',
-              fontWeight: 'bold'
-            })}>Contact Us</span>
+        <div
+          className={flex({
+            flexDir: "column",
+            p: 4,
+            border: "1px black solid",
+            rounded: "xl",
+            bg: "white",
+            width: "24rem",
+          })}
+        >
+          <span
+            className={css({
+              fontSize: "xl",
+              fontWeight: "bold",
+            })}
+          >
+            Enterprise
+          </span>
+          <div
+            className={hstack({
+              gap: 2,
+            })}
+          >
+            <span
+              className={css({
+                fontSize: "3xl",
+                fontWeight: "bold",
+              })}
+            >
+              Contact Us
+            </span>
           </div>
-          <span className={css({
-            color: 'neutral.600',
-            mt: 2
-          })}>For when you need something a little more automated</span>
+          <span
+            className={css({
+              color: "neutral.600",
+              mt: 2,
+            })}
+          >
+            For when you need something a little more automated
+          </span>
           <ul className={featureList}>
-            <li style={{ display: 'flex', alignItems: 'center' }}>
+            <li style={{ display: "flex", alignItems: "center" }}>
               <i className={`fa-solid fa-circle-check ${iconStyle}`}></i>
               <span>One feature</span>
             </li>
-            <li style={{ display: 'flex', alignItems: 'center' }}>
+            <li style={{ display: "flex", alignItems: "center" }}>
               <i className={`fa-solid fa-circle-check ${iconStyle}`}></i>
               <span>Two feature</span>
             </li>
-            <li style={{ display: 'flex', alignItems: 'center' }}>
+            <li style={{ display: "flex", alignItems: "center" }}>
               <i className={`fa-solid fa-circle-check ${iconStyle}`}></i>
               <span>Three feature</span>
             </li>
-            <li style={{ display: 'flex', alignItems: 'center' }}>
+            <li style={{ display: "flex", alignItems: "center" }}>
               <i className={`fa-solid fa-circle-check ${iconStyle}`}></i>
               <span>Four feature</span>
             </li>
-            <li style={{ display: 'flex', alignItems: 'center' }}>
+            <li style={{ display: "flex", alignItems: "center" }}>
               <i className={`fa-solid fa-circle-check ${iconStyle}`}></i>
               <span>Five feature</span>
             </li>
@@ -289,7 +357,6 @@ export default function Plans({ loaderData }: Route.ComponentProps) {
           >
             Talk to Us
           </button>
-
         </div>
       </div>
     </div>

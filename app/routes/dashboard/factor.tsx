@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { useSubmit, useNavigation, useActionData, useLoaderData } from "react-router";
+import {
+  useSubmit,
+  useNavigation,
+  useActionData,
+  useLoaderData,
+} from "react-router";
 import { css } from "carbonyxation/css";
 import { flex } from "carbonyxation/patterns";
 import Table, { type Column } from "~/components/table";
@@ -8,17 +13,15 @@ import type { Route } from "./+types/factor";
 import { db } from "~/db/db";
 import { combinedFactorsView, factors, orgFactors } from "~/db/schema";
 import { and, or, eq, isNull, isNotNull } from "drizzle-orm";
-import {
-  FactorForm,
-} from "~/components/factor-input";
+import { FactorForm } from "~/components/factor-input";
 
-import { getAuth } from '@clerk/react-router/ssr.server'
+import { getAuth } from "@clerk/react-router/ssr.server";
 import { redirect } from "react-router";
 
 export async function loader(args: Route.LoaderArgs) {
-  const auth = await getAuth(args)
+  const auth = await getAuth(args);
   if (!auth.orgId) {
-    return redirect('/')
+    return redirect("/");
   }
 
   // Get all central factors
@@ -32,7 +35,7 @@ export async function loader(args: Route.LoaderArgs) {
 
   // Create a map of overrides by originalFactorId for quick lookup
   const overrideMap = new Map();
-  orgFactorsData.forEach(orgFactor => {
+  orgFactorsData.forEach((orgFactor) => {
     if (orgFactor.originalFactorId) {
       overrideMap.set(orgFactor.originalFactorId, orgFactor);
     }
@@ -42,21 +45,21 @@ export async function loader(args: Route.LoaderArgs) {
   const availableFactors = [];
 
   // Add central factors (with overrides applied if they exist)
-  centralFactors.forEach(centralFactor => {
+  centralFactors.forEach((centralFactor) => {
     const override = overrideMap.get(centralFactor.id);
 
     if (override) {
       // There's an override - use the override data but keep the central ID
       availableFactors.push({
-        id: centralFactor.id,  // Keep the central factor ID
+        id: centralFactor.id, // Keep the central factor ID
         name: override.name,
         type: override.type,
         subType: override.subType,
         unit: override.unit,
         factor: override.factor,
-        factorSource: 0,  // Mark as central (even though it's showing override data)
-        isOverridden: true,  // Add a flag to indicate it's an override
-        orgFactorId: override.id  // Store the org factor ID for edit/delete operations
+        factorSource: 0, // Mark as central (even though it's showing override data)
+        isOverridden: true, // Add a flag to indicate it's an override
+        orgFactorId: override.id, // Store the org factor ID for edit/delete operations
       });
     } else {
       // No override - use the central factor as is
@@ -68,15 +71,15 @@ export async function loader(args: Route.LoaderArgs) {
         unit: centralFactor.unit,
         factor: centralFactor.factor,
         factorSource: 0,
-        isOverridden: false
+        isOverridden: false,
       });
     }
   });
 
   // Add custom org factors (ones that don't override central factors)
   orgFactorsData
-    .filter(orgFactor => !orgFactor.originalFactorId)
-    .forEach(customOrgFactor => {
+    .filter((orgFactor) => !orgFactor.originalFactorId)
+    .forEach((customOrgFactor) => {
       availableFactors.push({
         id: customOrgFactor.id,
         name: customOrgFactor.name,
@@ -85,7 +88,7 @@ export async function loader(args: Route.LoaderArgs) {
         unit: customOrgFactor.unit,
         factor: customOrgFactor.factor,
         factorSource: 1,
-        isCustom: true
+        isCustom: true,
       });
     });
 
@@ -97,7 +100,7 @@ export async function action(args: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent");
   const auth = await getAuth(args);
-  const orgId = auth.orgId
+  const orgId = auth.orgId;
 
   if (!orgId) {
     return { success: false, message: "Organization ID is required" };
@@ -120,15 +123,16 @@ export async function action(args: Route.ActionArgs) {
         .where(
           and(
             eq(orgFactors.originalFactorId, Number(originalFactorId)),
-            eq(orgFactors.orgId, orgId)
-          )
+            eq(orgFactors.orgId, orgId),
+          ),
         )
         .limit(1);
 
       if (existingOverride.length > 0) {
         return {
           success: false,
-          message: "An override for this factor already exists. Please edit the existing override."
+          message:
+            "An override for this factor already exists. Please edit the existing override.",
         };
       }
     }
@@ -143,7 +147,7 @@ export async function action(args: Route.ActionArgs) {
         factor,
         orgId,
         originalFactorId: originalFactorId ? Number(originalFactorId) : null,
-        isCustom
+        isCustom,
       })
       .returning();
 
@@ -151,7 +155,9 @@ export async function action(args: Route.ActionArgs) {
       success: true,
       intent: "add",
       updatedRecord: result[0],
-      message: isCustom ? "Custom factor added successfully" : "Factor override created successfully",
+      message: isCustom
+        ? "Custom factor added successfully"
+        : "Factor override created successfully",
     };
   }
 
@@ -183,8 +189,8 @@ export async function action(args: Route.ActionArgs) {
         .where(
           and(
             eq(orgFactors.originalFactorId, Number(id)),
-            eq(orgFactors.orgId, orgId)
-          )
+            eq(orgFactors.orgId, orgId),
+          ),
         )
         .limit(1);
 
@@ -214,7 +220,7 @@ export async function action(args: Route.ActionArgs) {
             subType: subType || centralFactor[0].subType || "",
             unit: unit || centralFactor[0].unit,
             factor: factor || centralFactor[0].factor,
-            isCustom: false
+            isCustom: false,
           })
           .returning();
 
@@ -230,16 +236,14 @@ export async function action(args: Route.ActionArgs) {
       const result = await db
         .update(orgFactors)
         .set({ name, type, subType, unit, factor })
-        .where(
-          and(
-            eq(orgFactors.id, Number(id)),
-            eq(orgFactors.orgId, orgId)
-          )
-        )
+        .where(and(eq(orgFactors.id, Number(id)), eq(orgFactors.orgId, orgId)))
         .returning();
 
       if (result.length === 0) {
-        return { success: false, message: "Factor not found or not authorized" };
+        return {
+          success: false,
+          message: "Factor not found or not authorized",
+        };
       }
 
       return {
@@ -259,12 +263,7 @@ export async function action(args: Route.ActionArgs) {
 
     const result = await db
       .delete(orgFactors)
-      .where(
-        and(
-          eq(orgFactors.id, Number(id)),
-          eq(orgFactors.orgId, orgId)
-        )
-      )
+      .where(and(eq(orgFactors.id, Number(id)), eq(orgFactors.orgId, orgId)))
       .returning();
 
     if (result.length === 0) {
@@ -305,7 +304,11 @@ export default function FactorRoute() {
       window.location.reload();
 
       setEditingFactor(null);
-    } else if (navigation.state === "idle" && actionData && !actionData.success) {
+    } else if (
+      navigation.state === "idle" &&
+      actionData &&
+      !actionData.success
+    ) {
       if (actionData.message) {
         toast.error(actionData.message);
       }
@@ -339,7 +342,7 @@ export default function FactorRoute() {
       unit: string;
       factor: number;
     },
-    isCentralFactor: boolean
+    isCentralFactor: boolean,
   ) => {
     const formData = new FormData();
     formData.append("intent", "edit");
@@ -368,7 +371,7 @@ export default function FactorRoute() {
       toast.error("Cannot delete this factor");
       return;
     }
-    
+
     const formData = new FormData();
     formData.append("intent", "delete");
     formData.append("id", idToDelete.toString());
@@ -385,14 +388,14 @@ export default function FactorRoute() {
       key: "factorSource",
       title: "Source",
       type: "string",
-      render: (value) => value === 0 ? "Central" : "Organization"
+      render: (value) => (value === 0 ? "Central" : "Organization"),
     },
   ];
 
   const handleEditStart = (item) => {
-    if (!item.subType) item.subType = ""
-    setEditingFactor(item)
-  }
+    if (!item.subType) item.subType = "";
+    setEditingFactor(item);
+  };
 
   return (
     <div
@@ -414,7 +417,9 @@ export default function FactorRoute() {
       </span>
       <FactorForm
         onSubmit={handleSubmit}
-        onEdit={(id, data) => handleEdit(id, data, editingFactor?.factorSource === 0)}
+        onEdit={(id, data) =>
+          handleEdit(id, data, editingFactor?.factorSource === 0)
+        }
         editingFactor={editingFactor}
       />
       <Table
@@ -422,15 +427,15 @@ export default function FactorRoute() {
         data={factorData}
         onEditStart={handleEditStart}
         onDelete={(item) => {
-	  console.log("O:", item)
+          console.log("O:", item);
           // Only allow deletion of organization factors, not central ones
           if (item.factorSource === 0 && !item.isOverridden) {
             toast.error("Cannot delete central factors");
             return;
           }
-	  if(confirm("Are you sure you want to delete this factor?")) {
+          if (confirm("Are you sure you want to delete this factor?")) {
             handleDelete(item);
-	  }
+          }
         }}
       />
     </div>

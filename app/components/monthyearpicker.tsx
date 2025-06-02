@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { css } from 'carbonyxation/css'; // Adjust import path for your PandaCSS setup
+import { useState, useEffect } from "react";
+import { css } from "carbonyxation/css"; // Adjust import path for your PandaCSS setup
 import {
   format,
   startOfMonth,
@@ -8,15 +8,15 @@ import {
   isBefore,
   isAfter,
   isSameMonth,
-} from 'date-fns';
-import * as chrono from 'chrono-node';
+} from "date-fns";
+import * as chrono from "chrono-node";
 import Select, {
   type GroupProps,
   type OptionProps,
   components as SelectComponents,
-} from 'react-select';
-import { vstack } from 'carbonyxation/patterns';
-import { toast } from 'sonner'
+} from "react-select";
+import { vstack } from "carbonyxation/patterns";
+import { toast } from "sonner";
 
 // Define the interface for a month/year option
 export interface DateOption {
@@ -37,19 +37,13 @@ interface DateRange {
 // Create an option for a month/year
 const createMonthOption = (d: Date) => {
   // Set to first day of month at 00:00 UTC
-  const adjustedDate = new Date(Date.UTC(
-    d.getFullYear(),
-    d.getMonth(),
-    1,
-    0,
-    0,
-    0,
-    0
-  ));
+  const adjustedDate = new Date(
+    Date.UTC(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0),
+  );
   return {
     date: adjustedDate,
     value: adjustedDate,
-    label: format(adjustedDate, 'MMMM yyyy'),
+    label: format(adjustedDate, "MMMM yyyy"),
   };
 };
 
@@ -65,7 +59,7 @@ const getDefaultOptions = () => {
   const options = [
     createMonthOption(oneMonthAgo),
     createMonthOption(twoMonthsAgo),
-    createMonthOption(threeMonthsAgo)
+    createMonthOption(threeMonthsAgo),
   ];
 
   return options;
@@ -94,7 +88,7 @@ const createYearMonthsGroup = (year = new Date().getFullYear()) => {
 
   const months = Array.from({ length: monthsToInclude }, (_, i) => {
     const d = new Date(year, i, 1);
-    return { ...createMonthOption(d), display: 'month-grid' };
+    return { ...createMonthOption(d), display: "month-grid" };
   });
 
   return {
@@ -105,9 +99,24 @@ const createYearMonthsGroup = (year = new Date().getFullYear()) => {
 
 // Suggestions for natural language parsing
 const suggestions = [
-  'january', 'february', 'march', 'april', 'may', 'june',
-  'july', 'august', 'september', 'october', 'november', 'december',
-  'this month', 'next month', 'last month', 'this year', 'next year', 'last year',
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
+  "this month",
+  "next month",
+  "last month",
+  "this year",
+  "next year",
+  "last year",
 ].reduce<{ [key: string]: string }>((acc, str) => {
   for (let i = 1; i < str.length; i++) {
     acc[str.substr(0, i)] = str;
@@ -119,17 +128,26 @@ const suggest = (str: string) =>
   str
     .split(/\b/)
     .map((i) => suggestions[i] || i)
-    .join('');
+    .join("");
 
 // Custom Group component for displaying months in a grid
 const Group = (props: GroupProps<DateOption, false>) => {
-  const { Heading, getStyles, children, label, headingProps, cx, theme, selectProps } = props;
+  const {
+    Heading,
+    getStyles,
+    children,
+    label,
+    headingProps,
+    cx,
+    theme,
+    selectProps,
+  } = props;
   return (
     <div
       aria-label={label as string}
       className={css({
-        margin: '8px 0',
-        paddingBottom: '8px',
+        margin: "8px 0",
+        paddingBottom: "8px",
       })}
     >
       <Heading
@@ -142,12 +160,14 @@ const Group = (props: GroupProps<DateOption, false>) => {
       >
         {label}
       </Heading>
-      <div className={css({
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: '8px',
-        padding: '8px 0',
-      })}>
+      <div
+        className={css({
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap: "8px",
+          padding: "8px 0",
+        })}
+      >
         {children}
       </div>
     </div>
@@ -157,24 +177,24 @@ const Group = (props: GroupProps<DateOption, false>) => {
 // Custom Option component for displaying months in a grid
 const Option = (props: OptionProps<DateOption, false>) => {
   const { data, innerRef, innerProps, isSelected } = props;
-  if (data.display === 'month-grid') {
+  if (data.display === "month-grid") {
     return (
       <div
         {...innerProps}
         ref={innerRef}
         className={css({
-          padding: '6px 10px',
-          textAlign: 'center',
-          cursor: 'pointer',
-          borderRadius: '4px',
-          backgroundColor: isSelected ? 'blue.500' : 'transparent',
-          color: isSelected ? 'white' : 'inherit',
+          padding: "6px 10px",
+          textAlign: "center",
+          cursor: "pointer",
+          borderRadius: "4px",
+          backgroundColor: isSelected ? "blue.500" : "transparent",
+          color: isSelected ? "white" : "inherit",
           _hover: {
-            backgroundColor: isSelected ? 'blue.600' : 'blue.100',
+            backgroundColor: isSelected ? "blue.600" : "blue.100",
           },
         })}
       >
-        {format(data.date, 'MMM')}
+        {format(data.date, "MMM")}
       </div>
     );
   } else {
@@ -185,8 +205,9 @@ const Option = (props: OptionProps<DateOption, false>) => {
 // Custom MultiValueLabel to show range
 const MultiValueLabel = ({ data }: any) => {
   return (
-    <div className={css({ padding: '2px 6px' })}>
-      {data.isStart ? 'From: ' : data.isEnd ? 'To: ' : ''}{data.label}
+    <div className={css({ padding: "2px 6px" })}>
+      {data.isStart ? "From: " : data.isEnd ? "To: " : ""}
+      {data.label}
     </div>
   );
 };
@@ -207,13 +228,13 @@ const Control = ({ children, ...props }: any) => {
         <div
           onClick={handleClear}
           className={css({
-            padding: '8px',
-            cursor: 'pointer',
-            color: 'gray.500',
-            _hover: { color: 'red.500' },
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            padding: "8px",
+            cursor: "pointer",
+            color: "gray.500",
+            _hover: { color: "red.500" },
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           })}
           aria-label="Clear selection"
           title="Clear selection"
@@ -237,15 +258,15 @@ const MonthYearRangePicker = ({ value, onChange }: MonthRangePickerProps) => {
   // Generate 5 historical years in chronological order (most recent first)
   const historicalYears = Array.from(
     { length: 5 },
-    (_, i) => currentYear - i - 1
+    (_, i) => currentYear - i - 1,
   ).sort((a, b) => b - a); // Sort most recent first
 
   const [options, setOptions] = useState<any[]>([
     ...defaultOptions,
-    ...historicalYears.map(year => createYearMonthsGroup(year))
+    ...historicalYears.map((year) => createYearMonthsGroup(year)),
   ]);
 
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [isSelectingEnd, setIsSelectingEnd] = useState(false);
 
   // Helper function to check if a date is in the future or current month
@@ -262,7 +283,7 @@ const MonthYearRangePicker = ({ value, onChange }: MonthRangePickerProps) => {
       // Reset to default options when input is cleared
       setOptions([
         ...defaultOptions,
-        ...historicalYears.map(year => createYearMonthsGroup(year))
+        ...historicalYears.map((year) => createYearMonthsGroup(year)),
       ]);
       return;
     }
@@ -279,7 +300,7 @@ const MonthYearRangePicker = ({ value, onChange }: MonthRangePickerProps) => {
         if (isInvalidFutureDate(month)) {
           setOptions([
             ...defaultOptions,
-            ...historicalYears.map(year => createYearMonthsGroup(year))
+            ...historicalYears.map((year) => createYearMonthsGroup(year)),
           ]);
           return;
         }
@@ -295,24 +316,26 @@ const MonthYearRangePicker = ({ value, onChange }: MonthRangePickerProps) => {
 
         // Find which year groups to show
         const year = getYear(month);
-        const surroundingYears = [year - 2, year - 1, year].filter(y => y <= currentYear - 1);
+        const surroundingYears = [year - 2, year - 1, year].filter(
+          (y) => y <= currentYear - 1,
+        );
 
         setOptions([
           monthOption,
-          ...surroundingYears.map(y => createYearMonthsGroup(y))
+          ...surroundingYears.map((y) => createYearMonthsGroup(y)),
         ]);
       } else {
         // If no valid date is found, show default options
         setOptions([
           ...defaultOptions,
-          ...historicalYears.map(year => createYearMonthsGroup(year))
+          ...historicalYears.map((year) => createYearMonthsGroup(year)),
         ]);
       }
     } catch (error) {
       // If parsing fails, show default options
       setOptions([
         ...defaultOptions,
-        ...historicalYears.map(year => createYearMonthsGroup(year))
+        ...historicalYears.map((year) => createYearMonthsGroup(year)),
       ]);
     }
   };
@@ -329,7 +352,7 @@ const MonthYearRangePicker = ({ value, onChange }: MonthRangePickerProps) => {
     // Validate selected date is not current month or in the future
     if (isInvalidFutureDate(selectedOption.date)) {
       toast.error("Cannot select current or future months", {
-        position: 'top-right',
+        position: "top-right",
       });
       return;
     }
@@ -339,14 +362,14 @@ const MonthYearRangePicker = ({ value, onChange }: MonthRangePickerProps) => {
       const newStartDate = {
         ...selectedOption,
         isStart: true,
-        label: `From: ${format(selectedOption.date, 'MMM yyyy')}`,
+        label: `From: ${format(selectedOption.date, "MMM yyyy")}`,
       };
       onChange({
         startDate: newStartDate,
-        endDate: null
+        endDate: null,
       });
       setIsSelectingEnd(true);
-      setInputValue('');
+      setInputValue("");
     } else {
       // Second selection is the end date
       const startDate = value.startDate;
@@ -354,7 +377,7 @@ const MonthYearRangePicker = ({ value, onChange }: MonthRangePickerProps) => {
       // Ensure end date is after or equal to start date
       if (startDate && isBefore(selectedOption.date, startDate.date)) {
         toast.error("End date must be after start date", {
-          position: 'top-right',
+          position: "top-right",
         });
         return;
       }
@@ -362,12 +385,12 @@ const MonthYearRangePicker = ({ value, onChange }: MonthRangePickerProps) => {
       const newEndDate = {
         ...selectedOption,
         isEnd: true,
-        label: `To: ${format(selectedOption.date, 'MMM yyyy')}`,
+        label: `To: ${format(selectedOption.date, "MMM yyyy")}`,
       };
 
       onChange({
         startDate: startDate,
-        endDate: newEndDate
+        endDate: newEndDate,
       });
 
       setIsSelectingEnd(false);
@@ -390,7 +413,7 @@ const MonthYearRangePicker = ({ value, onChange }: MonthRangePickerProps) => {
       return "Select end month...";
     }
     if (value.startDate && value.endDate) {
-      return `${format(value.startDate.date, 'MMM yyyy')} - ${format(value.endDate.date, 'MMM yyyy')}`;
+      return `${format(value.startDate.date, "MMM yyyy")} - ${format(value.endDate.date, "MMM yyyy")}`;
     }
     return "Select month range...";
   };
@@ -404,8 +427,8 @@ const MonthYearRangePicker = ({ value, onChange }: MonthRangePickerProps) => {
     if (value.startDate && value.endDate) {
       // When both dates are selected, show as one value
       return {
-        label: `${format(value.startDate.date, 'MMM yyyy')} - ${format(value.endDate.date, 'MMM yyyy')}`,
-        value: 'range',
+        label: `${format(value.startDate.date, "MMM yyyy")} - ${format(value.endDate.date, "MMM yyyy")}`,
+        value: "range",
         date: value.startDate.date,
       };
     }
@@ -414,11 +437,13 @@ const MonthYearRangePicker = ({ value, onChange }: MonthRangePickerProps) => {
   };
 
   return (
-    <div className={vstack({
-      width: '100%',
-      minWidth: '14rem',
-      gap: 0
-    })}>
+    <div
+      className={vstack({
+        width: "100%",
+        minWidth: "14rem",
+        gap: 0,
+      })}
+    >
       <Select
         inputId="month-range"
         components={{
@@ -437,16 +462,16 @@ const MonthYearRangePicker = ({ value, onChange }: MonthRangePickerProps) => {
         options={options}
         maxMenuHeight={380}
         className={css({
-          width: '100%',
+          width: "100%",
         })}
         styles={{
           control: (base) => ({
             ...base,
             borderColor: "black",
             ":active": {
-              outlineColor: "green"
+              outlineColor: "green",
             },
-            minHeight: '42px',
+            minHeight: "42px",
           }),
           menu: (base) => ({
             ...base,
@@ -457,12 +482,15 @@ const MonthYearRangePicker = ({ value, onChange }: MonthRangePickerProps) => {
         isSelectingEnd={isSelectingEnd}
       />
       {isSelectingEnd && value.startDate && (
-        <div className={css({
-          marginTop: '8px',
-          fontSize: 'sm',
-          color: 'blue.600',
-        })}>
-          Now select end month (must be after {format(value.startDate.date, 'MMM yyyy')}) or click ✕ to reset
+        <div
+          className={css({
+            marginTop: "8px",
+            fontSize: "sm",
+            color: "blue.600",
+          })}
+        >
+          Now select end month (must be after{" "}
+          {format(value.startDate.date, "MMM yyyy")}) or click ✕ to reset
         </div>
       )}
     </div>

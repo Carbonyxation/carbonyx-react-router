@@ -7,7 +7,10 @@ import {
 } from "@react-router/dev/routes";
 
 export default [
-  layout("routes/landing-layout.tsx", [index("routes/home.tsx"), route("/pricing", "routes/plans.tsx")]),
+  layout("routes/landing-layout.tsx", [
+    index("routes/home.tsx"),
+    route("/pricing", "routes/plans.tsx"),
+  ]),
   route("/signin/*", "routes/sign-in.tsx"),
   route("/signup/*", "routes/sign-up.tsx"),
 
@@ -20,8 +23,12 @@ export default [
   ...prefix("/dashboard", [
     layout("routes/dashboard/layout.tsx", [
       route("/", "routes/dashboard/dashboard.tsx"),
-      route("/notebook", "routes/dashboard/pluem-ai.tsx", { id: 'notebook-main' }),
-      route("/notebook/:notebookId", "routes/dashboard/pluem-ai.tsx", { id: 'notebook-id' }),
+      route("/notebook", "routes/dashboard/pluem-ai.tsx", {
+        id: "notebook-main",
+      }),
+      route("/notebook/:notebookId", "routes/dashboard/pluem-ai.tsx", {
+        id: "notebook-id",
+      }),
       route("/assets", "routes/dashboard/assets.tsx"),
       route("/info", "routes/dashboard/information.tsx"),
       route("/electricity", "routes/dashboard/electricity.tsx"),
@@ -30,14 +37,21 @@ export default [
       route("/waste", "routes/dashboard/waste.tsx"),
       route("/factor", "routes/dashboard/factor.tsx"),
       route("/navigation", "routes/dashboard/navigation.tsx"),
-      route("/coming-soon-excel", "routes/dashboard/coming-soon.tsx", { id: "coming-soon-excel" }),
-      route("/coming-soon-erp", "routes/dashboard/coming-soon.tsx", { id: "coming-soon-erp" }),
+      route("/coming-soon-excel", "routes/dashboard/coming-soon.tsx", {
+        id: "coming-soon-excel",
+      }),
+      route("/coming-soon-erp", "routes/dashboard/coming-soon.tsx", {
+        id: "coming-soon-erp",
+      }),
       ...prefix("/settings", [
         layout("routes/dashboard/settings.tsx", [
           route("/", "routes/dashboard/settings.tsx", { id: "settings-route" }),
-          route("/organization/billing", "routes/dashboard/settings/org-billing.tsx")
-        ])
-      ])
+          route(
+            "/organization/billing",
+            "routes/dashboard/settings/org-billing.tsx",
+          ),
+        ]),
+      ]),
     ]),
   ]),
 ] satisfies RouteConfig;

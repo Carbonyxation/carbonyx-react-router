@@ -7,7 +7,7 @@ import Logo from "../assets/logo.png";
 import { SignedOut, SignedIn, SignUpButton } from "@clerk/react-router";
 import { Link } from "react-router";
 
-export function meta({ }: Route.MetaArgs) {
+export function meta({}: Route.MetaArgs) {
   return [
     { title: "New React Router App" },
     { name: "description", content: "Welcome to React Router!" },
@@ -63,14 +63,18 @@ export default function Home() {
           </span>
           <SignedOut>
             <SignUpButton>
-              <button className={button({ variant: "solid", color: "primary" })}>
+              <button
+                className={button({ variant: "solid", color: "primary" })}
+              >
                 Get Started
               </button>
             </SignUpButton>
           </SignedOut>
           <SignedIn>
-            <Link to='/dashboard'>
-              <button className={button({ variant: "solid", color: "primary" })}>
+            <Link to="/dashboard">
+              <button
+                className={button({ variant: "solid", color: "primary" })}
+              >
                 Dashboard
               </button>
             </Link>

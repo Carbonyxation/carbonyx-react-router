@@ -1,5 +1,5 @@
 // time-utils.ts (New file for time-related helper functions)
-import { DateTime } from 'luxon'
+import { DateTime } from "luxon";
 
 /**
  * Formats a Unix timestamp into "Mon YYYY" format.
@@ -86,21 +86,20 @@ export function getPreviousYearRange(date: Date): {
   };
 }
 
-
 // offset n unit into the past
 export function parseOffset(timeStart: DateTime, offset: string) {
-  let value = parseInt(offset.slice(0, -1), 10)
-  let unit = offset.slice(-1)
+  let value = parseInt(offset.slice(0, -1), 10);
+  let unit = offset.slice(-1);
 
-  let dt = timeStart.setZone("Asia/Bangkok")
+  let dt = timeStart.setZone("Asia/Bangkok");
   switch (unit) {
-    case 'y':
-      return dt.minus({ years: value })
-    case 'm':
-      return dt.minus({ months: value })
-    case 'd':
-      return dt.minus({ days: value })
+    case "y":
+      return dt.minus({ years: value });
+    case "m":
+      return dt.minus({ months: value });
+    case "d":
+      return dt.minus({ days: value });
     default:
-      throw new Error(`Unknown time unit: ${unit}`)
+      throw new Error(`Unknown time unit: ${unit}`);
   }
 }

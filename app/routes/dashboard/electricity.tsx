@@ -30,12 +30,15 @@ export async function loader(args: Route.LoaderArgs) {
   const electricity_usage = await db
     .select()
     .from(collectedData)
-    .innerJoin(combinedFactorsView, eq(collectedData.factorId, combinedFactorsView.id))
+    .innerJoin(
+      combinedFactorsView,
+      eq(collectedData.factorId, combinedFactorsView.id),
+    )
     .where(
       and(
         eq(collectedData.orgId, orgId),
-        eq(combinedFactorsView.type, factorType)
-      )
+        eq(combinedFactorsView.type, factorType),
+      ),
     );
 
   // Fetch available factors with 'factor' value
@@ -46,22 +49,25 @@ export async function loader(args: Route.LoaderArgs) {
       and(
         or(
           isNull(combinedFactorsView.factorOrgId),
-          eq(combinedFactorsView.factorOrgId, orgId)
+          eq(combinedFactorsView.factorOrgId, orgId),
         ),
-        eq(combinedFactorsView.type, factorType)
-      )
-    )
+        eq(combinedFactorsView.type, factorType),
+      ),
+    );
 
   // Calculate total emission using the fetched factor
   const electricity_usage_with_emission: CollectedDataWithEmission[] =
     electricity_usage.map((data) => {
       const factor =
-            availableFactors.find((f) => f.id === data.collected_data.factorId)?.factor || 0;
+        availableFactors.find((f) => f.id === data.collected_data.factorId)
+          ?.factor || 0;
       return {
         ...data,
         recordedFactor: factor,
         totalEmission:
-          Math.round((data.collected_data.value * factor + Number.EPSILON) * 100) / 100,
+          Math.round(
+            (data.collected_data.value * factor + Number.EPSILON) * 100,
+          ) / 100,
       };
     });
 
@@ -70,10 +76,10 @@ export async function loader(args: Route.LoaderArgs) {
       ...item.collected_data,
       type: item.combined_factors_view.name,
       recordedFactor: item.recordedFactor,
-      totalEmission: item.totalEmission
-    }
-  })
-  
+      totalEmission: item.totalEmission,
+    };
+  });
+
   return { formattedData, availableFactors };
 }
 
@@ -136,16 +142,13 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function ElectricityInputPage() {
-  const { formattedData, availableFactors } =
-    useLoaderData<typeof loader>();
+  const { formattedData, availableFactors } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const submit = useSubmit();
 
   // Use state to track the table data, initialized from the loader
-  const [tableData, setTableData] = useState(
-    formattedData
-  );
+  const [tableData, setTableData] = useState(formattedData);
 
   const [editingData, setEditingData] =
     useState<DataInputProps["editingData"]>(null);
@@ -162,14 +165,15 @@ export default function ElectricityInputPage() {
           }
           const factor =
             availableFactors.find(
-              (f) => f.id === actionData.updatedRecord.factorId
+              (f) => f.id === actionData.updatedRecord.factorId,
             )?.factor || 0;
           const newRecord = {
             ...actionData.updatedRecord,
             recordedFactor: factor,
             totalEmission:
               Math.round(
-                (actionData.updatedRecord.value * factor + Number.EPSILON) * 100
+                (actionData.updatedRecord.value * factor + Number.EPSILON) *
+                  100,
               ) / 100,
           };
           return [...prev, newRecord];
@@ -180,7 +184,7 @@ export default function ElectricityInputPage() {
             if (item.id === actionData.updatedRecord.id) {
               const factor =
                 availableFactors.find(
-                  (f) => f.id === actionData.updatedRecord.factorId
+                  (f) => f.id === actionData.updatedRecord.factorId,
                 )?.factor || 0;
               return {
                 ...actionData.updatedRecord,
@@ -188,16 +192,16 @@ export default function ElectricityInputPage() {
                 totalEmission:
                   Math.round(
                     (actionData.updatedRecord.value * factor + Number.EPSILON) *
-                    100
+                      100,
                   ) / 100,
               };
             }
             return item;
-          })
+          }),
         );
       } else if (actionData.intent === "delete" && actionData.updatedRecord) {
         setTableData((prev) =>
-          prev.filter((item) => item.id !== actionData.updatedRecord.id)
+          prev.filter((item) => item.id !== actionData.updatedRecord.id),
         );
       }
 
@@ -233,7 +237,7 @@ export default function ElectricityInputPage() {
     formData.append("factorId", newData.factorId.toString());
     formData.append(
       "value",
-      newData.value === "" ? "0" : newData.value.toString()
+      newData.value === "" ? "0" : newData.value.toString(),
     );
     formData.append("orgId", newData.orgId.toString());
     formData.append("factorValue", newData.factorValue.toString());
@@ -254,7 +258,7 @@ export default function ElectricityInputPage() {
     updatedData: {
       factorId: number;
       value: number | "";
-    }
+    },
   ) => {
     const formData = new FormData();
     formData.append("intent", "edit");
@@ -262,7 +266,7 @@ export default function ElectricityInputPage() {
     formData.append("factorId", updatedData.factorId.toString());
     formData.append(
       "value",
-      updatedData.value === "" ? "0" : updatedData.value.toString()
+      updatedData.value === "" ? "0" : updatedData.value.toString(),
     );
     submit(formData, { method: "post" });
   };
@@ -310,4 +314,3 @@ export default function ElectricityInputPage() {
     </div>
   );
 }
-

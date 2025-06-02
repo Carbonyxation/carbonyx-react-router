@@ -12,7 +12,7 @@ export default function SignUpPage() {
         flexDir: "column",
         md: {
           flexDir: "row",
-          justifyContent: "space-between"
+          justifyContent: "space-between",
         },
         height: "svh",
       })}
@@ -25,7 +25,7 @@ export default function SignUpPage() {
             maxHeight: "svh",
             width: "1/2",
             left: 0,
-            top: 0
+            top: 0,
           },
           pos: "sticky", // make it actually sticky later
           width: "full",
@@ -54,8 +54,8 @@ export default function SignUpPage() {
           paddingY: 16,
           gap: 12,
           md: {
-            width: "1/2"
-          }
+            width: "1/2",
+          },
         })}
       >
         <span

@@ -52,29 +52,29 @@ const DataInput = ({
 }: DataInputProps) => {
   // Determine which mode we're in based on inputType and available data
   const [mode, setMode] = useState<"factor" | "asset">(
-    inputType === "asset" ? "asset" : "factor"
+    inputType === "asset" ? "asset" : "factor",
   );
-  
+
   // Factor input state
   const [factorId, setFactorId] = useState<number>(0);
   const [value, setValue] = useState<number | "">(0);
   const [inputValue, setInputValue] = useState<string>("0");
-  
+
   // Asset input state
   const [assetId, setAssetId] = useState<string>("");
   const [assetValue, setAssetValue] = useState<number | "">(0);
   const [assetValueInput, setAssetValueInput] = useState<string>("0");
-  
+
   const auth = useAuth();
   const orgId = auth.orgId || "1";
-  
+
   // Get filtered lists based on availability
-  const filteredFactors = factorType ?
-    availableFactors.filter(factor => factor.type === factorType) :
-    availableFactors;
+  const filteredFactors = factorType
+    ? availableFactors.filter((factor) => factor.type === factorType)
+    : availableFactors;
   const hasFactors = filteredFactors.length > 0;
   const hasAssets = availableAssets.length > 0;
-  
+
   // Initialize with first available option or from editingData
   useEffect(() => {
     if (filteredFactors.length > 0 && factorId === 0) {
@@ -84,12 +84,15 @@ const DataInput = ({
       setAssetId(availableAssets[0].id);
     }
   }, [filteredFactors, availableAssets]);
-  
+
   // Handle editing data - updated to properly handle changes to editingData
   useEffect(() => {
     if (editingData) {
       // Reset based on mode and what data is available
-      if (inputType === "asset" || ((editingData.assetId || editingData.asset_id) && inputType === "both")) {
+      if (
+        inputType === "asset" ||
+        ((editingData.assetId || editingData.asset_id) && inputType === "both")
+      ) {
         setMode("asset");
         if (editingData.assetId) setAssetId(editingData.assetId);
         if (editingData.asset_id) setAssetId(editingData.asset_id);
@@ -122,31 +125,41 @@ const DataInput = ({
       }
     }
   }, [editingData, inputType, filteredFactors, availableAssets, mode]);
-  
+
   // Get selected item details
-  const selectedFactor = filteredFactors.find(factor => factor.id === factorId);
-  const selectedAsset = availableAssets.find(asset => asset.id === assetId);
-  
+  const selectedFactor = filteredFactors.find(
+    (factor) => factor.id === factorId,
+  );
+  const selectedAsset = availableAssets.find((asset) => asset.id === assetId);
+
   // Calculate emissions for preview (when applicable)
   const selectedFactorValue = selectedFactor?.factor || 0;
-  const calculatedFactorEmission = typeof value === 'number' ?
-    Math.round(((value * selectedFactorValue) + Number.EPSILON) * 100) / 100 : 0;
-  
+  const calculatedFactorEmission =
+    typeof value === "number"
+      ? Math.round((value * selectedFactorValue + Number.EPSILON) * 100) / 100
+      : 0;
+
   const assetFactorValue = selectedAsset?.factor || 0;
-  const calculatedAssetEmission = typeof assetValue === 'number' && selectedAsset ?
-    Math.round(((assetValue * assetFactorValue * selectedAsset.conversion_rate) + Number.EPSILON) * 100) / 100 : 0;
-  
+  const calculatedAssetEmission =
+    typeof assetValue === "number" && selectedAsset
+      ? Math.round(
+          (assetValue * assetFactorValue * selectedAsset.conversion_rate +
+            Number.EPSILON) *
+            100,
+        ) / 100
+      : 0;
+
   // Form handling
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    
+
     // Optional: Add confirmation dialog when editing
     if (editingData) {
       if (!confirm("Are you sure you want to save these changes?")) {
         return; // User canceled
       }
     }
-    
+
     if (mode === "factor" && selectedFactor) {
       if (editingData) {
         await onEdit(editingData.id, {
@@ -161,7 +174,7 @@ const DataInput = ({
           factorValue: selectedFactorValue,
         });
       }
-      
+
       // Reset form after submission if not editing
       if (!editingData) {
         setValue(0);
@@ -182,7 +195,7 @@ const DataInput = ({
           recordedFactor: assetFactorValue,
         });
       }
-      
+
       // Reset form after submission if not editing
       if (!editingData) {
         setAssetValue(0);
@@ -334,9 +347,12 @@ const DataInput = ({
       </label>
       {assetValue && selectedAsset && (
         <div className={css({ fontSize: "sm", color: "gray.600" })}>
-          Factor value: {assetFactorValue} {selectedAsset.factor_unit || "kWh"} per {selectedAsset.unit}
+          Factor value: {assetFactorValue} {selectedAsset.factor_unit || "kWh"}{" "}
+          per {selectedAsset.unit}
           <br />
-          Energy equivalent: {(Number(assetValue) * assetFactorValue).toFixed(2)} {selectedAsset.factor_unit || "kWh"}
+          Energy equivalent:{" "}
+          {(Number(assetValue) * assetFactorValue).toFixed(2)}{" "}
+          {selectedAsset.factor_unit || "kWh"}
           <br />
           Estimated emissions: {calculatedAssetEmission} Kg CO₂e
         </div>
@@ -345,17 +361,21 @@ const DataInput = ({
   );
 
   // Handle case where no data is available
-  if ((inputType === "factor" && !hasFactors) ||
+  if (
+    (inputType === "factor" && !hasFactors) ||
     (inputType === "asset" && !hasAssets) ||
-    (inputType === "both" && !hasFactors && !hasAssets)) {
+    (inputType === "both" && !hasFactors && !hasAssets)
+  ) {
     return (
-      <div className={css({
-        p: 4,
-        border: "1px solid",
-        borderColor: "neutral.400",
-        bg: "white",
-        borderRadius: "md",
-      })}>
+      <div
+        className={css({
+          p: 4,
+          border: "1px solid",
+          borderColor: "neutral.400",
+          bg: "white",
+          borderRadius: "md",
+        })}
+      >
         No data available for the selected input type.
       </div>
     );

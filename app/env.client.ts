@@ -4,7 +4,7 @@ import { z } from "zod";
 export const env = createEnv({
   clientPrefix: "VITE_",
   client: {
-    VITE_GRAPHHOPPER_URL: z.string()
+    VITE_GRAPHHOPPER_URL: z.string(),
   },
 
   runtimeEnv: import.meta.env,

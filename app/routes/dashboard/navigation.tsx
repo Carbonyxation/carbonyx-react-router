@@ -1,6 +1,6 @@
-import { css } from 'carbonyxation/css';
-import { useState, useEffect } from 'react';
-import { env } from '~/env.client';
+import { css } from "carbonyxation/css";
+import { useState, useEffect } from "react";
+import { env } from "~/env.client";
 
 // Separate component to handle routing that uses useMap hook
 const RoutingMachine = ({ libraries }) => {
@@ -22,12 +22,9 @@ const RoutingMachine = ({ libraries }) => {
       router: new L.Routing.GraphHopper(undefined, {
         useCustomModel: true,
         alternativeRoute: true,
-        serviceUrl: env.VITE_GRAPHHOPPER_URL
+        serviceUrl: env.VITE_GRAPHHOPPER_URL,
       }),
-      waypoints: [
-        L.latLng(13.4510, 99.6341),
-        L.latLng(13.7563, 100.5018)
-      ]
+      waypoints: [L.latLng(13.451, 99.6341), L.latLng(13.7563, 100.5018)],
     }).addTo(map);
 
     // Clean up on unmount
@@ -47,24 +44,35 @@ const MapComponent = () => {
     const loadLibraries = async () => {
       try {
         // Import CSS first
-        await import('leaflet/dist/leaflet.css');
-        await import('leaflet-routing-machine/dist/leaflet-routing-machine.css');
+        await import("leaflet/dist/leaflet.css");
+        await import(
+          "leaflet-routing-machine/dist/leaflet-routing-machine.css"
+        );
 
         // Import Leaflet and React-Leaflet
-        const leafletModule = await import('leaflet');
+        const leafletModule = await import("leaflet");
         const L = leafletModule.default || leafletModule;
-        const reactLeaflet = await import('react-leaflet');
+        const reactLeaflet = await import("react-leaflet");
 
         // Import routing machine AFTER leaflet is loaded
-        await import('leaflet-routing-machine');
-        await import('@carbonyx/lrm-graphhopper');
+        await import("leaflet-routing-machine");
+        await import("@carbonyx/lrm-graphhopper");
 
         // Fix the icon issue
         delete L.Icon.Default.prototype._getIconUrl;
         L.Icon.Default.mergeOptions({
-          iconUrl: new URL('leaflet/dist/images/marker-icon.png', import.meta.url).href,
-          iconRetinaUrl: new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).href,
-          shadowUrl: new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).href,
+          iconUrl: new URL(
+            "leaflet/dist/images/marker-icon.png",
+            import.meta.url,
+          ).href,
+          iconRetinaUrl: new URL(
+            "leaflet/dist/images/marker-icon-2x.png",
+            import.meta.url,
+          ).href,
+          shadowUrl: new URL(
+            "leaflet/dist/images/marker-shadow.png",
+            import.meta.url,
+          ).href,
         });
 
         // Set libraries to be used in rendering
@@ -88,21 +96,19 @@ const MapComponent = () => {
   const { MapContainer, TileLayer, Marker, Popup } = libraries;
 
   return (
-    <div style={{ height: '100%', width: '100%' }}>
+    <div style={{ height: "100%", width: "100%" }}>
       <MapContainer
         center={[13.7563, 100.5018]}
         zoom={13}
         scrollWheelZoom={true}
-        style={{ height: '100%', width: '100%' }}
+        style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <Marker position={[13.7563, 100.5018]}>
-          <Popup>
-            Bangkok
-          </Popup>
+          <Popup>Bangkok</Popup>
         </Marker>
 
         {/* Add the routing component which uses useMap internally */}
@@ -113,12 +119,14 @@ const MapComponent = () => {
 };
 
 export default function Navigation() {
-  const [routingType, setRoutingType] = useState<'ab' | 'optim'>('ab');
+  const [routingType, setRoutingType] = useState<"ab" | "optim">("ab");
 
   return (
-    <div className={css({
-      height: '100%',
-    })}>
+    <div
+      className={css({
+        height: "100%",
+      })}
+    >
       <MapComponent />
     </div>
   );

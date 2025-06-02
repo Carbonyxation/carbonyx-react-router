@@ -23,7 +23,11 @@ export interface FactorFormProps {
   onEdit: (id: number, data: Partial<FactorData>) => Promise<void>;
 }
 
-export const FactorForm = ({ editingFactor, onSubmit, onEdit }: FactorFormProps) => {
+export const FactorForm = ({
+  editingFactor,
+  onSubmit,
+  onEdit,
+}: FactorFormProps) => {
   const auth = useAuth();
   const orgId = auth.orgId || "1";
   const isEditing = !!editingFactor;
@@ -32,7 +36,7 @@ export const FactorForm = ({ editingFactor, onSubmit, onEdit }: FactorFormProps)
   const [subType, setSubType] = useState("");
   const [unit, setUnit] = useState("");
   const [factor, setFactor] = useState("");
-  
+
   // Replace hasEditingDataApplied with this effect that runs whenever editingFactor changes
   useEffect(() => {
     if (editingFactor) {
@@ -56,7 +60,7 @@ export const FactorForm = ({ editingFactor, onSubmit, onEdit }: FactorFormProps)
     e.preventDefault();
     const numericFactor = parseFloat(factor);
     if (isNaN(numericFactor)) return alert("Invalid factor value");
-    
+
     if (isEditing && editingFactor) {
       // Optional: Add confirmation before saving changes
       if (confirm("Are you sure you want to save these changes?")) {
@@ -80,7 +84,7 @@ export const FactorForm = ({ editingFactor, onSubmit, onEdit }: FactorFormProps)
         isCustom: true,
       });
     }
-    
+
     // Optionally reset form after submit
     if (!isEditing) {
       setName("");
@@ -90,9 +94,20 @@ export const FactorForm = ({ editingFactor, onSubmit, onEdit }: FactorFormProps)
       setFactor("");
     }
   };
-  
+
   return (
-    <form onSubmit={handleSubmit} className={css({ display: "grid", gap: 4, border: "1px solid", borderColor: "neutral.400", bg: "white", borderRadius: "md", p: 4 })}>
+    <form
+      onSubmit={handleSubmit}
+      className={css({
+        display: "grid",
+        gap: 4,
+        border: "1px solid",
+        borderColor: "neutral.400",
+        bg: "white",
+        borderRadius: "md",
+        p: 4,
+      })}
+    >
       <label>
         Factor Name:
         <input
@@ -143,7 +158,16 @@ export const FactorForm = ({ editingFactor, onSubmit, onEdit }: FactorFormProps)
           required
         />
       </label>
-      <button type="submit" className={css({ mt: 4, p: 2, bg: "blue.600", color: "white", borderRadius: "md" })}>
+      <button
+        type="submit"
+        className={css({
+          mt: 4,
+          p: 2,
+          bg: "blue.600",
+          color: "white",
+          borderRadius: "md",
+        })}
+      >
         {isEditing ? "Update Factor" : "Add Factor"}
       </button>
     </form>

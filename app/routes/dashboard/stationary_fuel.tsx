@@ -29,12 +29,15 @@ export async function loader(args: Route.LoaderArgs) {
   const stationaryFuelsUsage = await db
     .select()
     .from(collectedData)
-    .innerJoin(combinedFactorsView, eq(collectedData.factorId, combinedFactorsView.id))
+    .innerJoin(
+      combinedFactorsView,
+      eq(collectedData.factorId, combinedFactorsView.id),
+    )
     .where(
       and(
-	eq(collectedData.orgId, orgId),
-        eq(combinedFactorsView.type, factorType)
-      )
+        eq(collectedData.orgId, orgId),
+        eq(combinedFactorsView.type, factorType),
+      ),
     );
 
   // Fetch available factors with 'factor' value
@@ -43,13 +46,13 @@ export async function loader(args: Route.LoaderArgs) {
     .from(combinedFactorsView)
     .where(
       and(
-	or(
-	  isNull(combinedFactorsView.factorOrgId),
-	  eq(combinedFactorsView.factorOrgId, orgId)
-	),
-	eq(combinedFactorsView.type, factorType)
-      )
-    )
+        or(
+          isNull(combinedFactorsView.factorOrgId),
+          eq(combinedFactorsView.factorOrgId, orgId),
+        ),
+        eq(combinedFactorsView.type, factorType),
+      ),
+    );
 
   type SFUsageWithEmission = (typeof stationaryFuelsUsage)[number] & {
     totalEmission: number;
@@ -66,7 +69,7 @@ export async function loader(args: Route.LoaderArgs) {
         recordedFactor: factor,
         totalEmission:
           Math.round(
-            (data.collected_data.value * factor + Number.EPSILON) * 100
+            (data.collected_data.value * factor + Number.EPSILON) * 100,
           ) / 100,
       };
     });
@@ -76,9 +79,9 @@ export async function loader(args: Route.LoaderArgs) {
       ...item.collected_data,
       type: item.combined_factors_view.name,
       recordedFactor: item.recordedFactor,
-      totalEmission: item.totalEmission
-    }
-  })
+      totalEmission: item.totalEmission,
+    };
+  });
 
   return { formattedData, availableFactors };
 }
@@ -160,20 +163,19 @@ export default function StationaryCombustionInputPage() {
           }
           const factor =
             availableFactors.find(
-              (f) => f.id === actionData.updatedRecord.factorId
+              (f) => f.id === actionData.updatedRecord.factorId,
             )?.factor || 0;
           const newRecord = {
             ...actionData.updatedRecord,
             type:
               availableFactors.find(
-                (f) => f.id === actionData.updatedRecord.factorId
+                (f) => f.id === actionData.updatedRecord.factorId,
               )?.name || "",
             recordedFactor: factor,
             totalEmission:
               Math.round(
-                (actionData.updatedRecord.value * factor +
-                  Number.EPSILON) *
-                100
+                (actionData.updatedRecord.value * factor + Number.EPSILON) *
+                  100,
               ) / 100,
           };
           return [...prev, newRecord];
@@ -184,29 +186,28 @@ export default function StationaryCombustionInputPage() {
             if (item.id === actionData.updatedRecord.id) {
               const factor =
                 availableFactors.find(
-                  (f) => f.id === actionData.updatedRecord.factorId
+                  (f) => f.id === actionData.updatedRecord.factorId,
                 )?.factor || 0;
               return {
                 ...actionData.updatedRecord,
                 type:
                   availableFactors.find(
-                    (f) => f.id === actionData.updatedRecord.factorId
+                    (f) => f.id === actionData.updatedRecord.factorId,
                   )?.name || "",
                 recordedFactor: factor,
                 totalEmission:
                   Math.round(
-                    (actionData.updatedRecord.value * factor +
-                      Number.EPSILON) *
-                    100
+                    (actionData.updatedRecord.value * factor + Number.EPSILON) *
+                      100,
                   ) / 100,
               };
             }
             return item;
-          })
+          }),
         );
       } else if (actionData.intent === "delete" && actionData.updatedRecord) {
         setData((prev) =>
-          prev.filter((item) => item.id !== actionData.updatedRecord.id)
+          prev.filter((item) => item.id !== actionData.updatedRecord.id),
         );
       } else {
         // For any other update, refresh computed totals
@@ -220,7 +221,7 @@ export default function StationaryCombustionInputPage() {
               totalEmission:
                 Math.round((item.value * factor + Number.EPSILON) * 100) / 100,
             };
-          })
+          }),
         );
       }
       setEditingData(null);
@@ -271,7 +272,7 @@ export default function StationaryCombustionInputPage() {
 
   const handleDataEdit = async (
     id: string,
-    updatedData: { factorId: number; value: number }
+    updatedData: { factorId: number; value: number },
   ) => {
     const formData = new FormData();
     formData.append("intent", "edit");
@@ -323,4 +324,3 @@ export default function StationaryCombustionInputPage() {
     </div>
   );
 }
-

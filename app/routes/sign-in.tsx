@@ -12,7 +12,7 @@ export default function SignInPage() {
         flexDir: "column",
         md: {
           flexDir: "row",
-          justifyContent: "space-between"
+          justifyContent: "space-between",
         },
         height: "svh",
       })}
@@ -50,8 +50,8 @@ export default function SignInPage() {
           paddingY: 16,
           gap: 12,
           md: {
-            width: "1/2"
-          }
+            width: "1/2",
+          },
         })}
       >
         <span

@@ -4,20 +4,20 @@ import { stripe } from "~/stripe";
 
 export type STRIPE_SUB_CACHE =
   | {
-    subscriptionId: string | null;
-    status: Stripe.Subscription.Status;
-    priceId: string | null;
-    currentPeriodStart: number | null;
-    currentPeriodEnd: number | null;
-    cancelAtPeriodEnd: boolean;
-    paymentMethod: {
-      brand: string | null; // e.g., "visa", "mastercard"
-      last4: string | null; // e.g., "4242"
-    } | null;
-  }
+      subscriptionId: string | null;
+      status: Stripe.Subscription.Status;
+      priceId: string | null;
+      currentPeriodStart: number | null;
+      currentPeriodEnd: number | null;
+      cancelAtPeriodEnd: boolean;
+      paymentMethod: {
+        brand: string | null; // e.g., "visa", "mastercard"
+        last4: string | null; // e.g., "4242"
+      } | null;
+    }
   | {
-    status: "none";
-  };
+      status: "none";
+    };
 
 export const STRIPE_CUSTOMER_ID_KV = {
   generateKey(orgId: string) {
@@ -73,11 +73,11 @@ export async function syncStripeDataToKV(customerId: string) {
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
     paymentMethod:
       subscription.default_payment_method &&
-        typeof subscription.default_payment_method !== "string"
+      typeof subscription.default_payment_method !== "string"
         ? {
-          brand: subscription.default_payment_method.card?.brand ?? null,
-          last4: subscription.default_payment_method.card?.last4 ?? null,
-        }
+            brand: subscription.default_payment_method.card?.brand ?? null,
+            last4: subscription.default_payment_method.card?.last4 ?? null,
+          }
         : null,
   };
 

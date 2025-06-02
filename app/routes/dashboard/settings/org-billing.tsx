@@ -30,14 +30,13 @@ export async function loader(args: Route.LoaderArgs) {
   const billingEmail = org.privateMetadata.billingEmail as string;
   const subscription = await getSubInformation(args);
 
-  if (!subscription) return redirect('/')
+  if (!subscription) return redirect("/");
 
   return { billingEmail, subscription };
 }
 
 export async function action(args: Route.ActionArgs) {
   const auth = await getAuth(args);
-
 
   const formData = await args.request.formData();
   const billingEmail = formData.get("billing_email");
@@ -111,56 +110,88 @@ export default function OrganizationSetting({
           Organization Billing
         </span>
       </div>
-      <div className={css({
-        p: 4,
-        border: '1px solid black',
-        rounded: 'lg',
-        bgColor: 'green.50',
-        color: 'black'
-      })}>
-        <span className={flex({
-          fontSize: '2xl',
-          fontWeight: 'bold',
-          flexDir: 'column'
-        })}>Current Plan</span>
-        <span>Your organization is currently on the {loaderData.subscription?.plan} plan.</span>
-        <div className={hstack({
-          justifyContent: 'space-between'
-        })}>
-          <div className={flex({
-            flexDir: 'column',
-            mt: 4
-          })}>
+      <div
+        className={css({
+          p: 4,
+          border: "1px solid black",
+          rounded: "lg",
+          bgColor: "green.50",
+          color: "black",
+        })}
+      >
+        <span
+          className={flex({
+            fontSize: "2xl",
+            fontWeight: "bold",
+            flexDir: "column",
+          })}
+        >
+          Current Plan
+        </span>
+        <span>
+          Your organization is currently on the {loaderData.subscription?.plan}{" "}
+          plan.
+        </span>
+        <div
+          className={hstack({
+            justifyContent: "space-between",
+          })}
+        >
+          <div
+            className={flex({
+              flexDir: "column",
+              mt: 4,
+            })}
+          >
             <div className={hstack()}>
-              <span className={css({
-                fontSize: 'xl',
-                fontWeight: 'semibold'
-              })}>{loaderData.subscription?.plan} Plan</span>
-              {loaderData.subscription.plan !== 'Demo' && (
-                <span className={css({
-                  px: 3,
-                  py: 1.4,
-                  rounded: 'xl',
-                  bg: 'accent.300',
-                  fontWeight: 'medium',
-                  color: 'white',
-                  fontSize: 'xs'
-                })}>Active</span>
+              <span
+                className={css({
+                  fontSize: "xl",
+                  fontWeight: "semibold",
+                })}
+              >
+                {loaderData.subscription?.plan} Plan
+              </span>
+              {loaderData.subscription.plan !== "Demo" && (
+                <span
+                  className={css({
+                    px: 3,
+                    py: 1.4,
+                    rounded: "xl",
+                    bg: "accent.300",
+                    fontWeight: "medium",
+                    color: "white",
+                    fontSize: "xs",
+                  })}
+                >
+                  Active
+                </span>
               )}
             </div>
-            <span className={hstack({
-              color: 'neutral.600'
-            })}>
-              {loaderData.subscription.plan !== 'Demo' ? (
-                <>&#3647;{loaderData.subscription.pricing_monthly} / month, billed {loaderData.subscription.billing_recurrent}</>
+            <span
+              className={hstack({
+                color: "neutral.600",
+              })}
+            >
+              {loaderData.subscription.plan !== "Demo" ? (
+                <>
+                  &#3647;{loaderData.subscription.pricing_monthly} / month,
+                  billed {loaderData.subscription.billing_recurrent}
+                </>
               ) : (
                 <>Data will be deleted after a month</>
               )}
             </span>
           </div>
-          <button className={button({
-            color: 'primary',
-          })}>{loaderData.subscription.plan === 'Demo' ? 'Subscribe Now' : 'Change Plan'}</button>
+          <button
+            className={button({
+              color: "primary",
+            })}
+          >
+            {loaderData.subscription.plan === "Demo"
+              ? "Subscribe Now"
+              : "Change Plan"}
+          </button>
         </div>
       </div>
       <form

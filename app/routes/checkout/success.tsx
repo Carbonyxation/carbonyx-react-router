@@ -8,17 +8,17 @@ export async function loader(args: Route.LoaderArgs) {
   const auth = await getAuth(args);
 
   if (!auth.userId || !auth.sessionId || !auth.orgId) {
-    throw redirect('/');
+    throw redirect("/");
   }
 
-  const stripeCustomerId = await STRIPE_CUSTOMER_ID_KV.get(auth.orgId)
+  const stripeCustomerId = await STRIPE_CUSTOMER_ID_KV.get(auth.orgId);
 
   if (!stripeCustomerId) {
-    return redirect('/')
+    return redirect("/");
   }
 
-  await syncStripeDataToKV(stripeCustomerId)
-  return redirect('/')
+  await syncStripeDataToKV(stripeCustomerId);
+  return redirect("/");
 }
 
 export default function SuccesCheckout() {
@@ -26,5 +26,5 @@ export default function SuccesCheckout() {
     <div>
       <span>Success!</span>
     </div>
-  )
+  );
 }

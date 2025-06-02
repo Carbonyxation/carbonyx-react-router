@@ -123,7 +123,7 @@ const TableRow = ({ rowData, columns, onEditStart, onDelete }: RowProps) => {
   };
 
   const handleDeleteClick = () => {
-    if(!shouldDisableDelete()) {
+    if (!shouldDisableDelete()) {
       onDelete(rowData);
     }
   };
@@ -132,21 +132,18 @@ const TableRow = ({ rowData, columns, onEditStart, onDelete }: RowProps) => {
     <tr>
       {columns.map((column) => {
         const cellValue = rowData[column.key];
-	let displayValue;
+        let displayValue;
 
-	if (column.render && typeof column.render === 'function') {
-	  displayValue = column.render(cellValue, rowData);
-	}
-	else if (column.type === "timestamp") {
-	  displayValue = formatDate(cellValue as number);
-	}
-	else if (cellValue !== undefined && cellValue !== null) {
-	  displayValue = cellValue.toString();
-	}
-	else {
-	  displayValue = "";
-	}
-	
+        if (column.render && typeof column.render === "function") {
+          displayValue = column.render(cellValue, rowData);
+        } else if (column.type === "timestamp") {
+          displayValue = formatDate(cellValue as number);
+        } else if (cellValue !== undefined && cellValue !== null) {
+          displayValue = cellValue.toString();
+        } else {
+          displayValue = "";
+        }
+
         return (
           <td
             key={`${cellValue}-${column.key}`}
@@ -160,7 +157,7 @@ const TableRow = ({ rowData, columns, onEditStart, onDelete }: RowProps) => {
           >
             {column.prefix && (
               <span>
-                {typeof column.prefix === 'function'
+                {typeof column.prefix === "function"
                   ? column.prefix(rowData)
                   : column.prefix}
               </span>
@@ -171,7 +168,7 @@ const TableRow = ({ rowData, columns, onEditStart, onDelete }: RowProps) => {
             {column.suffix && (
               <span className={css({ color: "neutral.500" })}>
                 {" "}
-                {typeof column.suffix === 'function'
+                {typeof column.suffix === "function"
                   ? column.suffix(rowData)
                   : column.suffix}
               </span>
@@ -209,7 +206,7 @@ const TableRow = ({ rowData, columns, onEditStart, onDelete }: RowProps) => {
         </button>
         <button
           onClick={handleDeleteClick}
-	  disabled={shouldDisableDelete()}
+          disabled={shouldDisableDelete()}
           className={css({
             bg: shouldDisableDelete() ? "gray.400" : "red.400",
             color: "white",

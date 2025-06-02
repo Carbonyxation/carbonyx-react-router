@@ -29,9 +29,7 @@ export async function loader(args: Route.LoaderArgs) {
     .select()
     .from(collectedData)
     .innerJoin(factors, eq(collectedData.factorId, factors.id))
-    .where(
-      and(eq(factors.type, factorType), eq(collectedData.orgId, orgId)),
-    );
+    .where(and(eq(factors.type, factorType), eq(collectedData.orgId, orgId)));
 
   // Fetch available factors with 'factor' value
   const availableFactors = await db
@@ -135,7 +133,8 @@ export default function TransportationInputPage() {
   const submit = useSubmit();
 
   const [data, setData] = useState(formattedData);
-  const [editingData, setEditingData] = useState<DataInputProps["editingData"]>(null);
+  const [editingData, setEditingData] =
+    useState<DataInputProps["editingData"]>(null);
 
   useEffect(() => {
     if (navigation.state === "idle" && actionData?.success) {
@@ -157,7 +156,8 @@ export default function TransportationInputPage() {
             recordedFactor: factor,
             totalEmission:
               Math.round(
-                (actionData.updatedRecord.value * factor + Number.EPSILON) * 100,
+                (actionData.updatedRecord.value * factor + Number.EPSILON) *
+                  100,
               ) / 100,
           };
           return [...prev, newRecord];
@@ -179,7 +179,8 @@ export default function TransportationInputPage() {
                 recordedFactor: factor,
                 totalEmission:
                   Math.round(
-                    (actionData.updatedRecord.value * factor + Number.EPSILON) * 100,
+                    (actionData.updatedRecord.value * factor + Number.EPSILON) *
+                      100,
                   ) / 100,
               };
             }
@@ -305,4 +306,3 @@ export default function TransportationInputPage() {
     </div>
   );
 }
-

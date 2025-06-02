@@ -1,13 +1,13 @@
-import { stripe } from '~/stripe'
-import type { Route } from './+types/stripe'
+import { stripe } from "~/stripe";
+import type { Route } from "./+types/stripe";
 
-import { data } from 'react-router'
-import { env } from '~/env.server'
-import type Stripe from 'stripe';
-import { syncStripeDataToKV } from '~/utils/kv';
+import { data } from "react-router";
+import { env } from "~/env.server";
+import type Stripe from "stripe";
+import { syncStripeDataToKV } from "~/utils/kv";
 
-import { waitUntil } from '@vercel/functions'
-import { tryCatch } from '~/utils/utilities';
+import { waitUntil } from "@vercel/functions";
+import { tryCatch } from "~/utils/utilities";
 
 const allowedEvents: Stripe.Event.Type[] = [
   "checkout.session.completed",
@@ -42,7 +42,7 @@ async function processEvent(event: Stripe.Event) {
   // This helps make it typesafe and also lets me know if my assumption is wrong
   if (typeof customerId !== "string") {
     throw new Error(
-      `[STRIPE HOOK][CANCER] ID isn't string.\nEvent type: ${event.type}`
+      `[STRIPE HOOK][CANCER] ID isn't string.\nEvent type: ${event.type}`,
     );
   }
 
@@ -50,30 +50,30 @@ async function processEvent(event: Stripe.Event) {
 }
 
 export async function action(args: Route.ActionArgs) {
-  const body = await args.request.text()
-  const signature = args.request.headers.get("Stripe-Signature")
+  const body = await args.request.text();
+  const signature = args.request.headers.get("Stripe-Signature");
 
-  if (!signature) throw data({}, { status: 400 })
+  if (!signature) throw data({}, { status: 400 });
 
   async function doEventProcessing() {
     if (typeof signature !== "string") {
-      throw new Error("[STRIPE HOOK] Header is not a string")
+      throw new Error("[STRIPE HOOK] Header is not a string");
     }
 
     const event = stripe.webhooks.constructEvent(
       body,
       signature,
-      env.STRIPE_WEBHOOK_SECRET
-    )
+      env.STRIPE_WEBHOOK_SECRET,
+    );
 
-    waitUntil(processEvent(event))
+    waitUntil(processEvent(event));
   }
 
-  const { error } = await tryCatch(doEventProcessing)
+  const { error } = await tryCatch(doEventProcessing);
 
   if (error) {
-    console.error("[STRIPE HOOK] Error processing event", error)
+    console.error("[STRIPE HOOK] Error processing event", error);
   }
 
-  return { received: true }
+  return { received: true };
 }

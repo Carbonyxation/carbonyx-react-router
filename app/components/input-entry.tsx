@@ -38,8 +38,16 @@ const TextInput: React.FC<TextInputProps> = ({
   };
 
   return (
-    <label htmlFor={id} className={css({ display: "block", width: "full", fontWeight: 'semibold' })}>
-      {label}{unit ? ` (${unit})` : ""}:
+    <label
+      htmlFor={id}
+      className={css({
+        display: "block",
+        width: "full",
+        fontWeight: "semibold",
+      })}
+    >
+      {label}
+      {unit ? ` (${unit})` : ""}:
       <input
         type={type === "number" ? "text" : type} // Using text for numeric values for better control
         id={id}
@@ -48,20 +56,25 @@ const TextInput: React.FC<TextInputProps> = ({
         onBlur={onBlur}
         placeholder={placeholder}
         inputMode={type === "number" ? "numeric" : "text"}
-        pattern={pattern || (type === "number" ? "-?[0-9]*\\.?[0-9]*" : undefined)}
+        pattern={
+          pattern || (type === "number" ? "-?[0-9]*\\.?[0-9]*" : undefined)
+        }
         required={required}
         disabled={disabled}
         name={name}
-        className={css({
-          display: "block",
-          width: "full",
-          p: 2,
-          my: 2,
-          border: "1px solid",
-          borderColor: "neutral.300",
-          borderRadius: "md",
-          fontWeight: 'normal'
-        }, className)}
+        className={css(
+          {
+            display: "block",
+            width: "full",
+            p: 2,
+            my: 2,
+            border: "1px solid",
+            borderColor: "neutral.300",
+            borderRadius: "md",
+            fontWeight: "normal",
+          },
+          className,
+        )}
       />
     </label>
   );

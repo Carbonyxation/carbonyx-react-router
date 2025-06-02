@@ -36,7 +36,7 @@ export default function LandingBar() {
             gap: 2,
           })}
         >
-          <Link to='/pricing'>
+          <Link to="/pricing">
             <button
               className={button({
                 color: "secondary",
@@ -66,10 +66,12 @@ export default function LandingBar() {
             </SignUpButton>
           </SignedOut>
           <SignedIn>
-            <Link to='/dashboard'>
-              <button className={button({
-                color: "primary"
-              })}>
+            <Link to="/dashboard">
+              <button
+                className={button({
+                  color: "primary",
+                })}
+              >
                 Dashboard
               </button>
             </Link>
