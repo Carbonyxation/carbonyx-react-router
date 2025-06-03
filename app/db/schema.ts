@@ -8,7 +8,7 @@ import {
   integer,
   timestamp,
   unique,
-  json,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 export const factors = pgTable(
@@ -16,9 +16,7 @@ export const factors = pgTable(
   {
     id: serial("id").primaryKey(),
     orgId: varchar("org_id", { length: 255 }), // NULL for central factors
-    originalFactorId: integer("original_factor_id").references(
-      () => factors.id,
-    ),
+    originalFactorId: integer("original_factor_id"),
     name: varchar("name", { length: 255 }).notNull(),
     type: varchar("type", { length: 255 }).notNull(),
     subType: varchar("sub_type", { length: 255 }),
@@ -30,7 +28,6 @@ export const factors = pgTable(
   (table) => [
     index("factors_org_type_idx").on(table.orgId, table.type),
     index("factors_type_idx").on(table.type),
-    unique("unique_org_factors").on(table.orgId, table.name, table.type),
   ],
 );
 
@@ -114,7 +111,7 @@ export const notebook = pgTable(
     name: varchar("name", { length: 255 }).notNull(),
     orgId: varchar("org_id", { length: 255 }).notNull(),
     userId: varchar("user_id", { length: 255 }).notNull(),
-    messages: json("messages"),
+    messages: jsonb("messages"),
     shared: boolean("shared"),
     timestamp: timestamp("timestamp").notNull().defaultNow(),
   },
