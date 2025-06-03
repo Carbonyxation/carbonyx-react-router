@@ -7,14 +7,12 @@ import { button } from "~/components/button";
 import React, { useEffect, useRef, useState } from "react";
 import { NotebookItem } from "~/components/notebookitem";
 import type { Route } from "./+types/pluem-ai";
-import { db, pluem_messages, dbc } from "~/db/db";
+import { db } from "~/db/db";
 import { notebook, type Notebook } from "~/db/schema";
 import { eq, and, or } from "drizzle-orm";
 import { redirect, Await } from "react-router";
 import type { DocumentGetResponse } from "nano";
 import Chat from "~/components/Chat";
-import { createOpenAI } from "@ai-sdk/openai";
-import { streamText, appendResponseMessages } from "ai";
 import { Link } from "react-router";
 import { getAuth } from "~/utils/auth-helper";
 import { env } from "~/env.server";
@@ -48,7 +46,7 @@ export async function loader(args: Route.LoaderArgs) {
     (nb) => nb.userId !== userId,
   );
 
-  let messages: Promise<DocumentGetResponse> | null = null;
+  let messages = null;
   let currentNotebook: Notebook | null = null;
   let initialMessage = null;
 
@@ -69,17 +67,14 @@ export async function loader(args: Route.LoaderArgs) {
     )[0];
 
     // Check if messages document exists, if not create it with empty messages array
-    try {
-      await dbc.auth(env.COUCH_USERNAME, env.COUCH_PASSWORD);
-      messages = pluem_messages.get(notebookId);
-    } catch (ex) {
-      // Document doesn't exist, let's initialize it
-      try {
-        await pluem_messages.insert({ messages: [] }, notebookId);
-        messages = pluem_messages.get(notebookId); // Try getting it again
-      } catch (insertError) {
-        console.error("Failed to initialize messages document:", insertError);
-      }
+    const results = await db
+      .select()
+      .from(notebook)
+      .where(eq(notebook.id, notebookId));
+    if (results.length === 0) {
+      messages = [];
+    } else {
+      messages = results[0].messages;
     }
   }
 
@@ -108,21 +103,15 @@ export async function action(args: Route.ActionArgs) {
     const initialMessage = (formData.get("message") as string) || "";
     const newId = crypto.randomUUID();
 
-    // Create the notebook
+    // Create the notebook and initialize the messages document as empty
     await db.insert(notebook).values({
       id: newId,
       userId,
       orgId,
-      timestamp: new Date().getTime(),
+      timestamp: new Date(),
+      messages: [],
       name: `New Notebook`,
     });
-
-    // Initialize the messages document as empty
-    try {
-      await pluem_messages.insert({ messages: [] }, newId);
-    } catch (err) {
-      console.error("Failed to initialize messages document:", err);
-    }
 
     // Pass the initial message as a URL parameter
     return redirect(
@@ -158,14 +147,6 @@ export async function action(args: Route.ActionArgs) {
 
     // Delete from the database
     await db.delete(notebook).where(eq(notebook.id, notebookId));
-
-    // Delete messages
-    try {
-      const doc = await pluem_messages.get(notebookId);
-      await pluem_messages.destroy(notebookId, doc._rev);
-    } catch (err) {
-      console.error("Failed to delete messages document:", err);
-    }
 
     return redirect("/dashboard/notebook");
   }

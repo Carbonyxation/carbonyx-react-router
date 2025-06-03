@@ -54,7 +54,7 @@ export default function Chat({
   const [newName, setNewName] = useState(currentNotebook?.name || "");
 
   // Safely initialize with empty array if initialMessagesCurrentNotebook is null
-  const initialMessages = initialMessagesCurrentNotebook?.messages || [];
+  const initialMessages = initialMessagesCurrentNotebook || [];
 
   const {
     messages,

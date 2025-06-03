@@ -4166,7 +4166,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.7.4, axios@npm:^1.7.7":
+"axios@npm:^1.7.7":
   version: 1.9.0
   resolution: "axios@npm:1.9.0"
   dependencies:
@@ -4553,7 +4553,6 @@ __metadata:
     micromark: "npm:^4.0.2"
     micromark-extension-gfm: "npm:^3.0.0"
     motion: "npm:^12.12.1"
-    nano: "npm:^10.1.4"
     postcss: "npm:^8.5.3"
     prettier: "npm:3.5.3"
     react: "npm:^19.1.0"
@@ -7938,17 +7937,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nano@npm:^10.1.4":
-  version: 10.1.4
-  resolution: "nano@npm:10.1.4"
-  dependencies:
-    axios: "npm:^1.7.4"
-    node-abort-controller: "npm:^3.1.1"
-    qs: "npm:^6.13.0"
-  checksum: 10c0/204b129226091828714e203dffc47362acc23b853d3cf681fa0d307beab05021b3c206e0511786d8879de13bb7b5ac049b6b74fdad2eed0043efb67bd5e76749
-  languageName: node
-  linkType: hard
-
 "nanoid@npm:^3.3.7, nanoid@npm:^3.3.8":
   version: 3.3.11
   resolution: "nanoid@npm:3.3.11"
@@ -8003,13 +7991,6 @@ __metadata:
     lower-case: "npm:^2.0.2"
     tslib: "npm:^2.0.3"
   checksum: 10c0/8ef545f0b3f8677c848f86ecbd42ca0ff3cd9dd71c158527b344c69ba14710d816d8489c746b6ca225e7b615108938a0bda0a54706f8c255933703ac1cf8e703
-  languageName: node
-  linkType: hard
-
-"node-abort-controller@npm:^3.1.1":
-  version: 3.1.1
-  resolution: "node-abort-controller@npm:3.1.1"
-  checksum: 10c0/f7ad0e7a8e33809d4f3a0d1d65036a711c39e9d23e0319d80ebe076b9a3b4432b4d6b86a7fab65521de3f6872ffed36fc35d1327487c48eb88c517803403eda3
   languageName: node
   linkType: hard
 
@@ -8733,7 +8714,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"qs@npm:^6.11.0, qs@npm:^6.13.0":
+"qs@npm:^6.11.0":
   version: 6.14.0
   resolution: "qs@npm:6.14.0"
   dependencies:

@@ -3,8 +3,8 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { streamText, appendResponseMessages, tool } from "ai";
 import { z } from "zod";
 import { tavilyTools } from "~/components/tools/tavilty";
-import { db, pluem_messages } from "~/db/db";
-import { collectedData, factors } from "~/db/schema";
+import { db } from "~/db/db";
+import { collectedData, factors, notebook } from "~/db/schema";
 import { env } from "~/env.server";
 
 import { getAuth } from "~/utils/auth-helper";
@@ -120,9 +120,9 @@ When responding:
               ),
           }),
           execute: async ({ timeframe }) => {
-            const endDtObj = DateTime.now().setZone("Asia/Bangkok"); // the end dt should be current time, since we are looking into the data from the past
-            const endDt = endDtObj.toUnixInteger();
-            const startDt = parseOffset(endDtObj, timeframe).toUnixInteger(); // we add string of 000 to convert to millis
+            const endDtObj = DateTime.now(); // the end dt should be current time, since we are looking into the data from the past
+            const endDt = endDtObj.toJSDate();
+            const startDt = parseOffset(endDtObj, timeframe).toJSDate(); // we add string of 000 to convert to millis
 
             const monthExpression = sql`strftime('%Y-%m', datetime(${collectedData.timestamp}, 'unixepoch'))`;
 
@@ -177,18 +177,13 @@ When responding:
           responseMessages: response.messages,
         });
 
-        let doc;
-        try {
-          doc = await pluem_messages.get(id);
-          await pluem_messages.insert(
-            { messages: newMessages, _rev: doc._rev },
-            id,
-          );
-          console.log("Messages updated in database");
-        } catch (e) {
-          await pluem_messages.insert({ messages: newMessages }, id);
-          console.log("New messages document created");
-        }
+        await db
+          .update(notebook)
+          .set({
+            messages: newMessages,
+          })
+          .where(eq(notebook.id, id));
+        console.log("Messages updated in database");
       },
     });
 

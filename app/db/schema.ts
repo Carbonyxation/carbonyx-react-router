@@ -1,17 +1,15 @@
 import {
   pgTable,
-  pgView,
   varchar,
   serial,
   real,
   index,
-  unionAll,
   boolean,
   integer,
   timestamp,
   unique,
+  json,
 } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
 
 export const factors = pgTable(
   "factors",
@@ -116,6 +114,7 @@ export const notebook = pgTable(
     name: varchar("name", { length: 255 }).notNull(),
     orgId: varchar("org_id", { length: 255 }).notNull(),
     userId: varchar("user_id", { length: 255 }).notNull(),
+    messages: json("messages"),
     shared: boolean("shared"),
     timestamp: timestamp("timestamp").notNull().defaultNow(),
   },

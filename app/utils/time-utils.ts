@@ -91,14 +91,13 @@ export function parseOffset(timeStart: DateTime, offset: string) {
   let value = parseInt(offset.slice(0, -1), 10);
   let unit = offset.slice(-1);
 
-  let dt = timeStart.setZone("Asia/Bangkok");
   switch (unit) {
     case "y":
-      return dt.minus({ years: value });
+      return timeStart.minus({ years: value });
     case "m":
-      return dt.minus({ months: value });
+      return timeStart.minus({ months: value });
     case "d":
-      return dt.minus({ days: value });
+      return timeStart.minus({ days: value });
     default:
       throw new Error(`Unknown time unit: ${unit}`);
   }
