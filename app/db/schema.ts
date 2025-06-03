@@ -1,113 +1,88 @@
 import {
-  sqliteTable,
-  sqliteView,
-  text,
-  integer,
+  pgTable,
+  pgView,
+  varchar,
+  serial,
   real,
   index,
-  union,
-} from "drizzle-orm/sqlite-core";
+  unionAll,
+  boolean,
+  integer,
+  timestamp,
+  unique,
+} from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
-// Central Factors data for the organization
-export const factors = sqliteTable(
+export const factors = pgTable(
   "factors",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    name: text("name").notNull(),
-    type: text("type").notNull(),
-    subType: text("sub_type"),
-    unit: text("unit").notNull(),
-    factor: real("factor").notNull(),
-  },
-  (table) => [
-    index("factors_lookup_id_idx").on(table.id, table.type),
-    index("factors_type_idx").on(table.type),
-  ],
-);
-
-// organization-specific factor data
-export const orgFactors = sqliteTable(
-  "org_factors",
-  {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    orgId: text("org_id").notNull(),
+    id: serial("id").primaryKey(),
+    orgId: varchar("org_id", { length: 255 }), // NULL for central factors
     originalFactorId: integer("original_factor_id").references(
       () => factors.id,
     ),
-    name: text("name").notNull(),
-    type: text("type").notNull(),
-    subType: text("sub_type").notNull(),
-    unit: text("unit").notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+    type: varchar("type", { length: 255 }).notNull(),
+    subType: varchar("sub_type", { length: 255 }),
+    unit: varchar("unit", { length: 255 }).notNull(),
     factor: real("factor").notNull(),
-    isCustom: integer("is_custom", { mode: "boolean" })
-      .notNull()
-      .default(false),
+    isCustom: boolean("is_custom").notNull().default(false),
+    createdAt: timestamp("created_at").defaultNow(),
   },
   (table) => [
-    index("org_factors_idx").on(table.id, table.orgId, table.type),
-    index("org_factors_type").on(table.type),
+    index("factors_org_type_idx").on(table.orgId, table.type),
+    index("factors_type_idx").on(table.type),
+    unique("unique_org_factors").on(table.orgId, table.name, table.type),
   ],
 );
 
 // Define the collectedData table
-export const collectedData = sqliteTable(
+export const collectedData = pgTable(
   "collected_data",
   {
-    id: text("id")
+    id: varchar("id", { length: 255 })
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    orgId: text("org_id").notNull(),
+    orgId: varchar("org_id", { length: 255 }).notNull(),
     factorId: integer("factor_id")
       .notNull()
-      .references(() => factors.id), // Define foreign key inline
-    isOrgFactor: integer("is_org_factor", { mode: "boolean" })
-      .notNull()
-      .default(false),
+      .references(() => factors.id),
     recordedFactor: integer("recorded_factor").notNull(),
     value: integer("value").notNull(),
-    timestamp: integer("timestamp")
-      .notNull()
-      .$defaultFn(() => (Date.now() / 1000) | 0),
+    timestamp: timestamp("timestamp", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => [
-    index("collected_data_org_timestamp_idx").on(table.orgId, table.timestamp),
-    index("collected_data_factor_lookup").on(table.factorId, table.isOrgFactor),
-    index("collected_data_join").on(
-      table.factorId,
-      table.isOrgFactor,
-      table.orgId,
-    ),
+    index("collected_data_org_id_idx").on(table.orgId),
+    index("collected_data_factor_id_idx").on(table.factorId),
+    index("collected_data_timestamp_idx").on(table.timestamp),
   ],
 );
 
-export const assets = sqliteTable("assets", {
-  id: text("id")
+export const assets = pgTable("assets", {
+  id: varchar("id", { length: 255 })
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  name: text("name").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
   factor_id: integer("factor_id")
     .notNull()
     .references(() => factors.id),
-  unit: text("unit").notNull(),
+  unit: varchar("unit", { length: 255 }).notNull(),
   conversion_rate: real("conversion_rate").notNull(),
 });
 
-export const assetsData = sqliteTable(
+export const assetsData = pgTable(
   "assets_data",
   {
-    id: text("id")
+    id: varchar("id", { length: 255 })
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    orgId: text("org_id").notNull(),
-    asset_id: text("asset_id")
+    orgId: varchar("org_id", { length: 255 }).notNull(),
+    asset_id: varchar("asset_id", { length: 255 })
       .notNull()
       .references(() => assets.id),
     value: integer("value").notNull(),
     recordedFactor: integer("recorded_factor").notNull(),
-    timestamp: integer("timestamp")
-      .notNull()
-      .$defaultFn(() => (Date.now() / 1000) | 0),
+    timestamp: timestamp("timestamp", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => [
     index("asset_data_org_id_idx").on(table.orgId),
@@ -115,18 +90,16 @@ export const assetsData = sqliteTable(
   ],
 );
 
-export const offsetData = sqliteTable(
+export const offsetData = pgTable(
   "offset_data",
   {
-    id: text("id")
+    id: varchar("id", { length: 255 })
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    orgId: text("org_id").notNull(),
+    orgId: varchar("org_id", { length: 255 }).notNull(),
     price_per_tco2e: real("price_per_tco2e").notNull(),
     tco2e: real("tco2e").notNull(),
-    timestamp: integer("timestamp")
-      .notNull()
-      .$defaultFn(() => (Date.now() / 1000) | 0),
+    timestamp: timestamp("timestamp", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => [
     index("offset_data_org_id_idx").on(table.orgId),
@@ -134,56 +107,22 @@ export const offsetData = sqliteTable(
   ],
 );
 
-export const notebook = sqliteTable(
+export const notebook = pgTable(
   "notebook",
   {
-    id: text("id")
+    id: varchar("id", { length: 255 })
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    name: text("name").notNull(),
-    orgId: text("org_id").notNull(),
-    userId: text("user_id").notNull(),
-    shared: integer("shared", { mode: "boolean" }),
-    timestamp: integer("timestamp")
-      .notNull()
-      .$defaultFn(() => (Date.now() / 1000) | 0),
+    name: varchar("name", { length: 255 }).notNull(),
+    orgId: varchar("org_id", { length: 255 }).notNull(),
+    userId: varchar("user_id", { length: 255 }).notNull(),
+    shared: boolean("shared"),
+    timestamp: timestamp("timestamp").notNull().defaultNow(),
   },
   (table) => [
     index("notebook_org_id_idx").on(table.orgId),
     index("notebook_timestamp_idx").on(table.timestamp),
   ],
-);
-
-export const combinedFactorsView = sqliteView("combined_factors_view").as(
-  (qb) => {
-    const centralFactors = qb
-      .select({
-        id: factors.id,
-        factorOrgId: sql`NULL`.as("factor_org_id"),
-        name: factors.name,
-        type: factors.type,
-        subType: factors.subType,
-        unit: factors.unit,
-        factor: factors.factor,
-        factorSource: sql`0`.as("factor_source"),
-      })
-      .from(factors);
-
-    const orgSpecificFactors = qb
-      .select({
-        id: orgFactors.id,
-        factorOrgId: orgFactors.orgId,
-        name: orgFactors.name,
-        type: orgFactors.type,
-        subType: orgFactors.subType,
-        unit: orgFactors.unit,
-        factor: orgFactors.factor,
-        factorSource: sql`1`.as("factor_source"),
-      })
-      .from(orgFactors);
-
-    return union(centralFactors, orgSpecificFactors);
-  },
 );
 
 export type Notebook = typeof notebook.$inferSelect;

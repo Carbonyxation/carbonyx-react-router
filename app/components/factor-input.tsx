@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@clerk/react-router";
 import { css } from "carbonyxation/css";
 
@@ -10,6 +10,9 @@ export interface FactorFormProps {
     subType: string;
     unit: string;
     factor: number;
+    factorSource?: number;
+    isOverride?: boolean;
+    originalFactorId?: number;
   } | null;
   onSubmit: (data: {
     orgId: string;
@@ -19,14 +22,25 @@ export interface FactorFormProps {
     unit: string;
     factor: number;
     isCustom?: boolean;
-  }) => Promise<void>;
-  onEdit: (id: number, data: Partial<FactorData>) => Promise<void>;
+  }) => void;
+  onEdit: (
+    id: number,
+    data: {
+      name: string;
+      type: string;
+      subType: string;
+      unit: string;
+      factor: number;
+    },
+  ) => void;
+  onCancel: () => void; // Add this prop
 }
 
 export const FactorForm = ({
   editingFactor,
   onSubmit,
   onEdit,
+  onCancel,
 }: FactorFormProps) => {
   const auth = useAuth();
   const orgId = auth.orgId || "1";
@@ -37,10 +51,9 @@ export const FactorForm = ({
   const [unit, setUnit] = useState("");
   const [factor, setFactor] = useState("");
 
-  // Replace hasEditingDataApplied with this effect that runs whenever editingFactor changes
+  // Update form fields when editingFactor changes
   useEffect(() => {
     if (editingFactor) {
-      // Update form fields when a new factor is being edited
       setName(editingFactor.name);
       setType(editingFactor.type);
       setSubType(editingFactor.subType || "");
@@ -54,28 +67,29 @@ export const FactorForm = ({
       setUnit("");
       setFactor("");
     }
-  }, [editingFactor]); // This dependency ensures the effect runs when editingFactor changes
+  }, [editingFactor]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const numericFactor = parseFloat(factor);
-    if (isNaN(numericFactor)) return alert("Invalid factor value");
+    if (isNaN(numericFactor)) {
+      alert("Invalid factor value");
+      return;
+    }
 
     if (isEditing && editingFactor) {
-      // Optional: Add confirmation before saving changes
-      if (confirm("Are you sure you want to save these changes?")) {
-        await onEdit(editingFactor.id, {
-          name,
-          type,
-          subType,
-          unit,
-          factor: numericFactor,
-        });
-      } else {
-        return; // User canceled the edit
-      }
+      // Editing existing factor
+      onEdit(editingFactor.id, {
+        name,
+        type,
+        subType,
+        unit,
+        factor: numericFactor,
+      });
     } else {
-      await onSubmit({
+      // Adding new factor
+      onSubmit({
+        orgId,
         name,
         type,
         subType,
@@ -85,7 +99,7 @@ export const FactorForm = ({
       });
     }
 
-    // Optionally reset form after submit
+    // Reset form after submit (only for new factors)
     if (!isEditing) {
       setName("");
       setType("");
@@ -93,6 +107,37 @@ export const FactorForm = ({
       setUnit("");
       setFactor("");
     }
+  };
+
+  const getFormTitle = () => {
+    if (!isEditing) return "Add New Factor";
+
+    if (editingFactor?.factorSource === 0) {
+      return editingFactor.isOverride
+        ? "Edit Factor Override"
+        : "Create Factor Override";
+    }
+
+    return "Edit Custom Factor";
+  };
+
+  const getSubmitButtonText = () => {
+    if (!isEditing) return "Add Factor";
+
+    if (editingFactor?.factorSource === 0 && !editingFactor.isOverride) {
+      return "Create Override";
+    }
+
+    return "Update Factor";
+  };
+
+  const handleCancel = () => {
+    setName("");
+    setType("");
+    setSubType("");
+    setUnit("");
+    setFactor("");
+    onCancel(); // Call the parent's cancel handler
   };
 
   return (
@@ -108,6 +153,30 @@ export const FactorForm = ({
         p: 4,
       })}
     >
+      <h3 className={css({ fontSize: "lg", fontWeight: "bold", mb: 2 })}>
+        {getFormTitle()}
+      </h3>
+
+      {isEditing &&
+        editingFactor?.factorSource === 0 &&
+        !editingFactor.isOverride && (
+          <div
+            className={css({
+              p: 3,
+              bg: "yellow.50",
+              border: "1px solid",
+              borderColor: "yellow.200",
+              borderRadius: "md",
+              mb: 2,
+            })}
+          >
+            <p className={css({ fontSize: "sm", color: "yellow.800" })}>
+              You're editing a central factor. This will create an
+              organization-specific override.
+            </p>
+          </div>
+        )}
+
       <label>
         Factor Name:
         <input
@@ -118,6 +187,7 @@ export const FactorForm = ({
           required
         />
       </label>
+
       <label>
         Type:
         <input
@@ -128,6 +198,7 @@ export const FactorForm = ({
           required
         />
       </label>
+
       <label>
         Sub Type:
         <input
@@ -135,8 +206,10 @@ export const FactorForm = ({
           value={subType}
           onChange={(e) => setSubType(e.target.value)}
           className={inputStyle}
+          placeholder="Optional"
         />
       </label>
+
       <label>
         Unit:
         <input
@@ -147,6 +220,7 @@ export const FactorForm = ({
           required
         />
       </label>
+
       <label>
         Factor Value:
         <input
@@ -158,18 +232,39 @@ export const FactorForm = ({
           required
         />
       </label>
-      <button
-        type="submit"
-        className={css({
-          mt: 4,
-          p: 2,
-          bg: "blue.600",
-          color: "white",
-          borderRadius: "md",
-        })}
-      >
-        {isEditing ? "Update Factor" : "Add Factor"}
-      </button>
+
+      <div className={css({ display: "flex", gap: 2, mt: 4 })}>
+        <button
+          type="submit"
+          className={css({
+            flex: 1,
+            p: 2,
+            bg: "blue.600",
+            color: "white",
+            borderRadius: "md",
+            _hover: { bg: "blue.700" },
+          })}
+        >
+          {getSubmitButtonText()}
+        </button>
+
+        {isEditing && (
+          <button
+            type="button"
+            onClick={handleCancel}
+            className={css({
+              px: 4,
+              py: 2,
+              bg: "gray.200",
+              color: "gray.700",
+              borderRadius: "md",
+              _hover: { bg: "gray.300" },
+            })}
+          >
+            Cancel
+          </button>
+        )}
+      </div>
     </form>
   );
 };
@@ -182,4 +277,9 @@ const inputStyle = css({
   borderColor: "gray.300",
   borderRadius: "md",
   mt: 1,
+  _focus: {
+    outline: "none",
+    borderColor: "blue.500",
+    boxShadow: "0 0 0 1px token(colors.blue.500)",
+  },
 });

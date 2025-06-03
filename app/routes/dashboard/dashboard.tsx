@@ -7,11 +7,7 @@ import type { Route } from "./+types/dashboard";
 import { provideData } from "~/utils/emission-provider.server";
 import { Suspense, useState, useEffect, useRef } from "react";
 import { monthlyOptions, yearlyOptions } from "~/utils/chart-options";
-import {
-  formatMonthYear,
-  getYearRange,
-  getPreviousYearRange,
-} from "~/utils/time-utils";
+import { formatMonthYear, getYearRange } from "~/utils/time-utils";
 import { Await } from "react-router";
 import { button } from "~/components/button";
 

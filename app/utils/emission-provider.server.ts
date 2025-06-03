@@ -1,13 +1,5 @@
 import { db } from "~/db/db";
-import {
-  collectedData,
-  factors,
-  offsetData,
-  orgFactors,
-  combinedFactorsView,
-  type CollectedData,
-  type CollectedDataWithEmission,
-} from "~/db/schema";
+import { collectedData, offsetData, factors } from "~/db/schema";
 import { sql, eq, and, between, SQL, sum, desc } from "drizzle-orm";
 
 // Types remain the same
@@ -182,8 +174,8 @@ function getBackgroundColor(label: string): string {
 // MAIN OPTIMIZATION: Single comprehensive query that fetches all needed data
 async function getAllEmissionData(
   orgId: string,
-  startDate: number,
-  endDate: number,
+  startDate: Date,
+  endDate: Date,
 ): Promise<{
   monthlyData: Array<{
     type: string;
@@ -202,38 +194,8 @@ async function getAllEmissionData(
     // Monthly emissions query
     db
       .select({
-        type: combinedFactorsView.type,
-        period:
-          sql`strftime('%Y-%m', ${collectedData.timestamp}, 'unixepoch')`.as(
-            "period",
-          ),
-        totalEmission:
-          sql<number>`sum(${collectedData.value} * ${collectedData.recordedFactor})`.as(
-            "total_emission",
-          ),
-      })
-      .from(collectedData)
-      .innerJoin(
-        combinedFactorsView,
-        and(
-          eq(collectedData.factorId, combinedFactorsView.id),
-          eq(collectedData.isOrgFactor, combinedFactorsView.isOrgFactor),
-        ),
-      )
-      .where(
-        and(
-          eq(collectedData.orgId, orgId),
-          between(collectedData.timestamp, startDate, endDate),
-        ),
-      )
-      .groupBy(combinedFactorsView.type, sql`period`)
-      .orderBy(sql`period`),
-
-    // Yearly emissions query
-    db
-      .select({
-        type: combinedFactorsView.type,
-        period: sql`strftime('%Y', ${collectedData.timestamp}, 'unixepoch')`.as(
+        type: factors.type,
+        period: sql`to_char(${collectedData.timestamp}, 'YYYY-MM')`.as(
           "period",
         ),
         totalEmission:
@@ -242,28 +204,41 @@ async function getAllEmissionData(
           ),
       })
       .from(collectedData)
-      .innerJoin(
-        combinedFactorsView,
-        and(
-          eq(collectedData.factorId, combinedFactorsView.id),
-          eq(collectedData.isOrgFactor, combinedFactorsView.isOrgFactor),
-        ),
-      )
+      .innerJoin(factors, eq(collectedData.factorId, factors.id))
       .where(
         and(
           eq(collectedData.orgId, orgId),
           between(collectedData.timestamp, startDate, endDate),
         ),
       )
-      .groupBy(combinedFactorsView.type, sql`period`)
+      .groupBy(factors.type, sql`period`)
+      .orderBy(sql`period`),
+
+    // Yearly emissions query
+    db
+      .select({
+        type: factors.type,
+        period: sql`to_char(${collectedData.timestamp}, 'YYYY')`.as("period"),
+        totalEmission:
+          sql<number>`sum(${collectedData.value} * ${collectedData.recordedFactor})`.as(
+            "total_emission",
+          ),
+      })
+      .from(collectedData)
+      .innerJoin(factors, eq(collectedData.factorId, factors.id))
+      .where(
+        and(
+          eq(collectedData.orgId, orgId),
+          between(collectedData.timestamp, startDate, endDate),
+        ),
+      )
+      .groupBy(factors.type, sql`period`)
       .orderBy(sql`period`),
 
     // Offset data query
     db
       .select({
-        year: sql`strftime('%Y', ${offsetData.timestamp}, 'unixepoch')`.as(
-          "year",
-        ),
+        year: sql`to_char(${offsetData.timestamp}, 'YYYY')`.as("year"),
         tco2e: offsetData.tco2e,
         price_per_tco2e: offsetData.price_per_tco2e,
       })
@@ -274,8 +249,12 @@ async function getAllEmissionData(
           between(offsetData.timestamp, startDate, endDate),
         ),
       )
-      .groupBy(sql`year`)
-      .orderBy(sql`year`),
+      .groupBy(
+        sql`to_char(${offsetData.timestamp}, 'YYYY')`,
+        offsetData.tco2e,
+        offsetData.price_per_tco2e,
+      )
+      .orderBy(sql`to_char(${offsetData.timestamp}, 'YYYY')`),
   ]);
 
   return {
@@ -392,16 +371,20 @@ async function provideData(orgId: string): Promise<DataOutput> {
 
   // Fetch ALL data in parallel - this is the key optimization
   const [mainData, previousMonthData, previousYearData] = await Promise.all([
-    getAllEmissionData(orgId, last5YearsStart / 1000, last5YearsEnd / 1000),
     getAllEmissionData(
       orgId,
-      previousMonthlyRange.start / 1000,
-      previousMonthlyRange.end / 1000,
+      new Date(last5YearsStart),
+      new Date(last5YearsEnd),
     ),
     getAllEmissionData(
       orgId,
-      previousYearlyRange.start / 1000,
-      previousYearlyRange.end / 1000,
+      new Date(previousMonthlyRange.start),
+      new Date(previousMonthlyRange.end),
+    ),
+    getAllEmissionData(
+      orgId,
+      new Date(previousYearlyRange.start),
+      new Date(previousYearlyRange.end),
     ),
   ]);
 

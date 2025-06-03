@@ -1,12 +1,11 @@
-import { drizzle } from "drizzle-orm/libsql/web";
+import { drizzle } from "drizzle-orm/neon-serverless";
 import { env } from "../env.server";
 import nano from "nano";
+import ws from "ws";
 
 const db = drizzle({
-  connection: {
-    url: env.TURSO_DATABASE_URL,
-    authToken: env.TURSO_AUTH_TOKEN,
-  },
+  connection: env.DB_CONNECTION_URL,
+  ws: ws,
 });
 
 const dbc = nano("https://couch.chanakancloud.net");
