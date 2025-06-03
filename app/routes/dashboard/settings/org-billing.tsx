@@ -115,7 +115,8 @@ export default function OrganizationSetting({
           p: 4,
           border: "1px solid black",
           rounded: "lg",
-          bgColor: "green.50",
+          bgColor:
+            loaderData.subscription?.plan !== "Demo" ? "green.50" : "red.50",
           color: "black",
         })}
       >
@@ -150,7 +151,10 @@ export default function OrganizationSetting({
                   fontWeight: "semibold",
                 })}
               >
-                {loaderData.subscription?.plan} Plan
+                {loaderData.subscription?.plan} Plan{" "}
+                {loaderData.subscription.plan === "Demo" && (
+                  <i className="fa-solid fa-triangle-exclamation"></i>
+                )}
               </span>
               {loaderData.subscription.plan !== "Demo" && (
                 <span

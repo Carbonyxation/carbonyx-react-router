@@ -166,10 +166,11 @@ export default function Shell() {
             {subscriptionPlan === "Demo" && (
               <NotificationBox
                 title="You are on a Demo Plan!"
-                content="This is a demo plan, organization data may be deleted after a month. Select a plan to make it permanent!"
+                content="This is a demo plan, organization data will be deleted after a month. Select a plan to make it permanent!"
                 buttonText="Choose Plan"
                 color="primary"
                 actionLink="/pricing"
+                bgColor="warning"
               />
             )}
 

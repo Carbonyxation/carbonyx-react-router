@@ -10,6 +10,7 @@ interface Props {
   buttonText: string;
   actionLink: string;
   color: "primary" | "accent";
+  bgColor?: "normal" | "warning" | "alert";
 }
 
 export default function PlanBox({
@@ -18,7 +19,9 @@ export default function PlanBox({
   buttonText,
   actionLink,
   color,
+  bgColor = "normal",
 }: Props) {
+  console.log(bgColor);
   return (
     <div
       className={flex({
@@ -27,6 +30,12 @@ export default function PlanBox({
         paddingY: 3,
         paddingX: 4,
         margin: 2,
+        bgColor:
+          bgColor === "normal"
+            ? "white"
+            : bgColor === "warning"
+              ? "orange.100"
+              : "red.100",
         borderColor: "black",
         borderStyle: "solid",
         borderWidth: 1,
