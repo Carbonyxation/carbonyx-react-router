@@ -67,7 +67,7 @@ export async function loader(args: Route.LoaderArgs) {
     return {
       ...item.collected_data,
       type: item.factors.name,
-      recordedFactor: item.recordedFactor,
+      recordedFactor: item.collected_data.recordedFactor,
       totalEmission: item.totalEmission,
     };
   });

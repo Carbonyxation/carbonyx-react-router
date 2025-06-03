@@ -11,12 +11,7 @@ import { useEffect, useState } from "react";
 import DataInput, { type DataInputProps } from "~/components/data-input";
 import Table from "~/components/table";
 import { db } from "~/db/db";
-import {
-  collectedData,
-  factors,
-  type CollectedData,
-  type CollectedDataWithEmission,
-} from "~/db/schema";
+import { collectedData, factors } from "~/db/schema";
 import type { Route } from "./+types/electricity";
 import { getAuth } from "@clerk/react-router/ssr.server";
 
@@ -68,7 +63,7 @@ export async function loader(args: Route.LoaderArgs) {
     return {
       ...item.collected_data,
       type: item.factors.name,
-      recordedFactor: item.recordedFactor,
+      recordedFactor: item.collected_data.recordedFactor,
       totalEmission: item.totalEmission,
     };
   });

@@ -11,12 +11,7 @@ import { useEffect, useState } from "react";
 import DataInput, { type DataInputProps } from "~/components/data-input";
 import Table from "~/components/table";
 import { db } from "~/db/db";
-import {
-  collectedData,
-  factors,
-  combinedFactorsView,
-  type CollectedDataWithEmission,
-} from "~/db/schema";
+import { collectedData, factors } from "~/db/schema";
 import type { Route } from "./+types/electricity";
 import { getAuth } from "@clerk/react-router/ssr.server";
 import { toast } from "sonner";
@@ -30,51 +25,39 @@ export async function loader(args: Route.LoaderArgs) {
   const electricity_usage = await db
     .select()
     .from(collectedData)
-    .innerJoin(
-      combinedFactorsView,
-      eq(collectedData.factorId, combinedFactorsView.id),
-    )
-    .where(
-      and(
-        eq(collectedData.orgId, orgId),
-        eq(combinedFactorsView.type, factorType),
-      ),
-    );
+    .innerJoin(factors, eq(collectedData.factorId, factors.id))
+    .where(and(eq(collectedData.orgId, orgId), eq(factors.type, factorType)));
 
   // Fetch available factors with 'factor' value
   const availableFactors = await db
     .select()
-    .from(combinedFactorsView)
+    .from(factors)
     .where(
       and(
-        or(
-          isNull(combinedFactorsView.factorOrgId),
-          eq(combinedFactorsView.factorOrgId, orgId),
-        ),
-        eq(combinedFactorsView.type, factorType),
+        or(isNull(factors.orgId), eq(factors.orgId, orgId)),
+        eq(factors.type, factorType),
       ),
     );
 
   // Calculate total emission using the fetched factor
-  const electricity_usage_with_emission: CollectedDataWithEmission[] =
-    electricity_usage.map((data) => {
-      const factor =
-        availableFactors.find((f) => f.id === data.collected_data.factorId)
-          ?.factor || 0;
-      return {
-        ...data,
-        recordedFactor: factor,
-        totalEmission:
-          Math.round(
-            (data.collected_data.value * factor + Number.EPSILON) * 100,
-          ) / 100,
-      };
-    });
+  const electricity_usage_with_emission = electricity_usage.map((data) => {
+    const factor =
+      availableFactors.find((f) => f.id === data.collected_data.factorId)
+        ?.factor || 0;
+    return {
+      ...data,
+      recordedFactor: factor,
+      totalEmission:
+        Math.round(
+          (data.collected_data.value * factor + Number.EPSILON) * 100,
+        ) / 100,
+    };
+  });
 
   const formattedData = electricity_usage_with_emission.map((item) => {
     return {
       ...item.collected_data,
-      type: item.combined_factors_view.name,
+      type: item.factors.name,
       recordedFactor: item.recordedFactor,
       totalEmission: item.totalEmission,
     };
