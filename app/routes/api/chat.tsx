@@ -14,6 +14,37 @@ import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { DateTime } from "luxon";
 import { parseOffset } from "~/utils/time-utils";
 
+function fillSqlParams(obj) {
+  let { sql, params } = obj;
+
+  // Replace $N with params[N-1], taking care with datatypes
+  return sql.replace(/\$(\d+)/g, (match, num) => {
+    let param = params[parseInt(num) - 1];
+    if (typeof param === "string") {
+      // Safely wrap strings in single quotes and escape any embedded single quotes
+      return `'${param.replace(/'/g, "''")}'`;
+    } else if (param === null || param === undefined) {
+      return "NULL";
+    } else {
+      // Numbers, dates, and all others
+      return param.toString();
+    }
+  });
+}
+
+// Example usage:
+const input = {
+  sql: `select "factors"."name", strftime('%Y-%m', datetime("collected_data"."timestamp", 'unixepoch')) as "month", SUM("collected_data"."value") as "Total Emissions (Kg CO2e)" from "collected_data" left join "factors" on "collected_data"."factor_id" = "factors"."id" where ("collected_data"."org_id" = $1 and "collected_data"."timestamp" >= $2 and "collected_data"."timestamp" <= $3) group by "factors"."name", strftime('%Y-%m', datetime("collected_data"."timestamp", 'unixepoch')) order by strftime('%Y-%m', datetime("collected_data"."timestamp", 'unixepoch')), "factors"."name" limit $4`,
+  params: [
+    "org_2uAKTdYWEWOSpvc934AbuCMpRhI",
+    "2025-03-04T04:24:27.616Z",
+    "2025-06-04T04:24:27.616Z",
+    1000,
+  ],
+};
+
+console.log(fillSqlParams(input));
+
 export async function action(args: Route.ActionArgs) {
   const body = await args.request.json();
   const auth = await getAuth(args);
@@ -124,7 +155,7 @@ When responding:
             const endDt = endDtObj.toJSDate();
             const startDt = parseOffset(endDtObj, timeframe).toJSDate(); // we add string of 000 to convert to millis
 
-            const monthExpression = sql`strftime('%Y-%m', datetime(${collectedData.timestamp}, 'unixepoch'))`;
+            const monthExpression = sql`TO_CHAR(${collectedData.timestamp}, 'YYYY-MM')`;
 
             const query = db
               .select({
@@ -138,7 +169,7 @@ When responding:
               .leftJoin(factors, eq(collectedData.factorId, factors.id))
               .where(
                 and(
-                  eq(collectedData.orgId, auth.orgId!), // Keeping your organization filter
+                  eq(collectedData.orgId, auth.orgId!), // Org filter
                   gte(collectedData.timestamp, startDt),
                   lte(collectedData.timestamp, endDt),
                 ),
@@ -147,13 +178,11 @@ When responding:
               .orderBy(monthExpression, factors.name)
               .limit(1000);
 
-            let sqlString = query.toSQL().sql;
-
-            query.toSQL().params.forEach((param) => {
-              sqlString = sqlString.replace("?", `'${param}'`);
-            });
+            let sqlString = fillSqlParams(query.toSQL());
 
             const regex = /where \(\s*([^)]+?)\s+and\s+/;
+
+            console.log(sqlString);
 
             return {
               type: "sql",
