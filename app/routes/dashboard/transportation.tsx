@@ -6,7 +6,7 @@ import {
   useSubmit,
   useActionData,
 } from "react-router";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull, or } from "drizzle-orm";
 import { useEffect, useState } from "react";
 import DataInput, { type DataInputProps } from "~/components/data-input";
 import Table from "~/components/table";
@@ -31,18 +31,18 @@ export async function loader(args: Route.LoaderArgs) {
     .innerJoin(factors, eq(collectedData.factorId, factors.id))
     .where(and(eq(factors.type, factorType), eq(collectedData.orgId, orgId)));
 
+  console.log(transportationsUsage);
+
   // Fetch available factors with 'factor' value
   const availableFactors = await db
-    .select({
-      id: factors.id,
-      name: factors.name,
-      unit: factors.unit,
-      type: factors.type,
-      subType: factors.subType,
-      factor: factors.factor,
-    })
+    .select()
     .from(factors)
-    .where(eq(factors.type, "transportation"));
+    .where(
+      and(
+        or(isNull(factors.orgId), eq(factors.orgId, orgId)),
+        eq(factors.type, factorType),
+      ),
+    );
 
   type TSUsageWithEmission = (typeof transportationsUsage)[number] & {
     totalEmission: number;
@@ -237,7 +237,10 @@ export default function TransportationInputPage() {
     const formData = new FormData();
     formData.append("intent", "add");
     formData.append("factorId", newData.factorId.toString());
-    formData.append("value", newData.value.toString());
+    formData.append(
+      "value",
+      newData.value === "" ? "0" : newData.value.toString(),
+    );
     formData.append("orgId", newData.orgId.toString());
     formData.append("factorValue", newData.factorValue.toString());
     submit(formData, { method: "post" });
@@ -260,7 +263,10 @@ export default function TransportationInputPage() {
     formData.append("intent", "edit");
     formData.append("id", id);
     formData.append("factorId", updatedData.factorId.toString());
-    formData.append("value", updatedData.value.toString());
+    formData.append(
+      "value",
+      updatedData.value === "" ? "0" : updatedData.value.toString(),
+    );
     submit(formData, { method: "post" });
   };
 
@@ -296,6 +302,7 @@ export default function TransportationInputPage() {
         onEdit={handleDataEdit}
         editingData={editingData}
         factorType={factorType}
+        allowEmptyValue={true}
       />
       <Table
         columns={columns}
