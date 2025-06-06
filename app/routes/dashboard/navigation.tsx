@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { env } from "~/env.client";
 
 // Separate component to handle routing that uses useMap hook
-const RoutingMachine = ({ libraries }) => {
+const RoutingMachine = ({ libraries, onDistanceCalculated }) => {
   const { useMap } = libraries;
   const map = useMap(); // Get direct access to the map instance
 
@@ -27,16 +27,38 @@ const RoutingMachine = ({ libraries }) => {
       waypoints: [L.latLng(13.451, 99.6341), L.latLng(13.7563, 100.5018)],
     }).addTo(map);
 
+    // Listen for routing events to get the calculated distance
+    routingControl.on("routesfound", function (e) {
+      const routes = e.routes;
+      if (routes && routes.length > 0) {
+        const mainRoute = routes[0];
+        const distanceInMeters = mainRoute.summary.totalDistance;
+        const distanceInKm = (distanceInMeters / 1000).toFixed(2);
+        const timeInSeconds = mainRoute.summary.totalTime;
+
+        // Call the callback with route information
+        if (onDistanceCalculated) {
+          onDistanceCalculated({
+            distanceMeters: distanceInMeters,
+            distanceKm: parseFloat(distanceInKm),
+            timeSeconds: timeInSeconds,
+            timeMinutes: Math.round(timeInSeconds / 60),
+            route: mainRoute,
+          });
+        }
+      }
+    });
+
     // Clean up on unmount
     return () => {
       routingControl.remove();
     };
-  }, [map, libraries]);
+  }, [map, libraries, onDistanceCalculated]);
 
   return null; // This component doesn't render anything visible
 };
 
-const MapComponent = () => {
+const MapComponent = ({ onDistanceCalculated }) => {
   const [libraries, setLibraries] = useState(null);
 
   // Load all required libraries
@@ -112,7 +134,10 @@ const MapComponent = () => {
         </Marker>
 
         {/* Add the routing component which uses useMap internally */}
-        <RoutingMachine libraries={libraries} />
+        <RoutingMachine
+          libraries={libraries}
+          onDistanceCalculated={onDistanceCalculated}
+        />
       </MapContainer>
     </div>
   );
@@ -120,6 +145,12 @@ const MapComponent = () => {
 
 export default function Navigation() {
   const [routingType, setRoutingType] = useState<"ab" | "optim">("ab");
+  const [routeInfo, setRouteInfo] = useState(null);
+
+  const handleDistanceCalculated = (info) => {
+    setRouteInfo(info);
+    console.log("Route calculated:", info);
+  };
 
   return (
     <div
@@ -127,7 +158,8 @@ export default function Navigation() {
         height: "100%",
       })}
     >
-      <MapComponent />
+      {/* Display route information */}
+      <MapComponent onDistanceCalculated={handleDistanceCalculated} />
     </div>
   );
 }
