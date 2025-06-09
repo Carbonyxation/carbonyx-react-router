@@ -43,7 +43,7 @@ export const collectedData = pgTable(
       .notNull()
       .references(() => factors.id),
     recordedFactor: real("recorded_factor").notNull(),
-    value: integer("value").notNull(),
+    value: real("value").notNull(),
     timestamp: timestamp("timestamp", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => [
