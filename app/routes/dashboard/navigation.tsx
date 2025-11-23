@@ -16,43 +16,8 @@ const RoutingMachine = ({ libraries, onDistanceCalculated }) => {
       console.error("L.Routing is not available");
       return;
     }
-
-    // Create routing control
-    const routingControl = L.Routing.control({
-      router: new L.Routing.GraphHopper(undefined, {
-        useCustomModel: true,
-        alternativeRoute: true,
-        serviceUrl: env.VITE_GRAPHHOPPER_URL,
-      }),
-      waypoints: [L.latLng(13.451, 99.6341), L.latLng(13.7563, 100.5018)],
-    }).addTo(map);
-
-    // Listen for routing events to get the calculated distance
-    routingControl.on("routesfound", function (e) {
-      const routes = e.routes;
-      if (routes && routes.length > 0) {
-        const mainRoute = routes[0];
-        const distanceInMeters = mainRoute.summary.totalDistance;
-        const distanceInKm = (distanceInMeters / 1000).toFixed(2);
-        const timeInSeconds = mainRoute.summary.totalTime;
-
-        // Call the callback with route information
-        if (onDistanceCalculated) {
-          onDistanceCalculated({
-            distanceMeters: distanceInMeters,
-            distanceKm: parseFloat(distanceInKm),
-            timeSeconds: timeInSeconds,
-            timeMinutes: Math.round(timeInSeconds / 60),
-            route: mainRoute,
-          });
-        }
-      }
-    });
-
     // Clean up on unmount
-    return () => {
-      routingControl.remove();
-    };
+    return () => {};
   }, [map, libraries, onDistanceCalculated]);
 
   return null; // This component doesn't render anything visible
@@ -78,7 +43,6 @@ const MapComponent = ({ onDistanceCalculated }) => {
 
         // Import routing machine AFTER leaflet is loaded
         await import("leaflet-routing-machine");
-        await import("@carbonyx/lrm-graphhopper");
 
         // Fix the icon issue
         delete L.Icon.Default.prototype._getIconUrl;

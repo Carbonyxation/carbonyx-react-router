@@ -14,7 +14,6 @@
     "@ai-sdk/react": "^1.2.12",
     "@babel/core": "^7.27.4",
     "@babel/preset-typescript": "^7.27.1",
-    "@carbonyx/lrm-graphhopper": "^2.1.0",
     "@clerk/backend": "^1.32.2",
     "@clerk/react-router": "^1.4.4",
     "@floating-ui/react": "^0.27.8",
