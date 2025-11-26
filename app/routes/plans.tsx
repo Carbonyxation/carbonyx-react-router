@@ -216,7 +216,7 @@ export default function Plans({ loaderData }: Route.ComponentProps) {
                   fontWeight: "bold",
                 })}
               >
-                &#3647;{recurringType === "annually" ? "40,000" : "4,000"}
+                &#3647;{recurringType === "annually" ? "15,000" : "1,250"}
               </span>
               <span
                 className={css({
